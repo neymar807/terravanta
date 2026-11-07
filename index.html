@@ -51,9 +51,9 @@ function drawChart(el,values,{max,unit,color='bar'}={}){
  if(color==='line'){
   const pts=values.map((v,i)=>[left+slot*(i+.5),top+ph-(v/safeMax)*ph]);
   s+=`<polyline class="line" points="${pts.map(p=>p.join(',')).join(' ')}"/>`;
-  pts.forEach(([x,y],i)=>s+=`<circle cx="${x}" cy="${y}" r="3.5" fill="#1e7654"><title>${months[i]}: ${values[i].toFixed(1)} ${unit}</title></circle>`);
+  pts.forEach(([x,y],i)=>s+=`<circle cx="${x}" cy="${y}" r="5" tabindex="0" style="cursor:crosshair" fill="#1e7654"><title>${months[i]} · ${values[i].toFixed(1)} ${unit}</title></circle>`);
  }else{
-  values.forEach((v,i)=>{let bh=Math.max(1,v/safeMax*ph),x=left+i*slot+slot*.18;s+=`<rect class="bar" x="${x}" y="${top+ph-bh}" width="${slot*.64}" height="${bh}" rx="4"><title>${months[i]}: ${v.toFixed(1)} ${unit}</title></rect>`});
+  values.forEach((v,i)=>{let bh=Math.max(1,v/safeMax*ph),x=left+i*slot+slot*.18;s+=`<rect class="bar" tabindex="0" style="cursor:crosshair" x="${x}" y="${top+ph-bh}" width="${slot*.64}" height="${bh}" rx="4"><title>${months[i]} · ${v.toFixed(1)} ${unit}</title></rect>`});
  }
  months.forEach((m,i)=>s+=`<text x="${left+slot*(i+.5)}" y="${h-8}" text-anchor="middle">${m}</text>`);
  el.innerHTML=s;
@@ -82,8 +82,6 @@ async function loadData(){
   $('temp').textContent=allT.toFixed(1)+'°';$('rain').textContent=climate.annualRain.toFixed(0);$('solar').textContent=allS.toFixed(1);
   drawChart($('rainChart'),rain,{max:Math.max(...rain)*1.15,unit:'mm'});
   drawChart($('tempChart'),temps,{max:Math.ceil(Math.max(...temps)/5)*5,unit:'°C',color:'line'});
-  drawChart($('yearRainChart'),annual.map(x=>x.rain),{max:Math.max(...annual.map(x=>x.rain))*1.15,unit:'mm'});
-  drawChart($('yearTempChart'),annual.map(x=>x.temp),{max:Math.ceil(Math.max(...annual.map(x=>x.temp))/5)*5,unit:'°C',color:'line'});
   const lowMonths=months.map((m,i)=>({m,rain:rain[i],normal:monthlyNormal[i],ratio:monthlyNormal[i]>0?rain[i]/monthlyNormal[i]:null})).filter(x=>x.ratio!==null&&x.ratio<0.75);
   $('droughtStatus').textContent=lowMonths.length?lowMonths.length+' of 12 months in 2024 were below 75% of their 2019–2024 same-month rainfall average.':'No 2024 month fell below 75% of its 2019–2024 same-month rainfall average.';
   $('droughtRows').innerHTML=months.map((m,i)=>{const avg=monthlyNormal[i],ratio=avg>0?rain[i]/avg:null;const label=ratio===null?'No baseline':ratio<0.5?'Very low':ratio<0.75?'Unusually low':'Near/above average';const cls=ratio!==null&&ratio<0.5?'very-dry':ratio!==null&&ratio<0.75?'dry':'normal';return '<tr><td>'+m+'</td><td>'+rain[i].toFixed(1)+' mm</td><td>'+avg.toFixed(1)+' mm</td><td>'+(ratio===null?'—':(ratio*100).toFixed(0)+'%')+'</td><td class="'+cls+'">'+label+'</td></tr>'}).join('');
