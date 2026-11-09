@@ -63,10 +63,10 @@ async function loadData(){
  locationName=$('place').selectedOptions[0].text;
  $('load').disabled=true;$('status').textContent='Requesting 2019–2024 daily data from NASA POWER…';
  try{
-  const url=new URL('https://power.larc.nasa.gov/api/temporal/daily/point');
-  url.search=new URLSearchParams({parameters:'T2M,PRECTOTCORR,ALLSKY_SFC_SW_DWN',community:'AG',longitude:lon,latitude:lat,start:'20190101',end:'20241231',format:'JSON'});
-  const response=await fetch(url);if(!response.ok)throw new Error('NASA POWER returned HTTP '+response.status);
-  const json=await response.json();const p=json?.properties?.parameter;
+  const url=new URL('https://terravanta.vercel.app/api/climate/daily');
+  url.search=new URLSearchParams({lat:String(lat),lon:String(lon),start_date:'2019-01-01',end_date:'2024-12-31'});
+  const response=await fetch(url);if(!response.ok)throw new Error('TerraVanta API returned HTTP '+response.status);
+  const json=await response.json();const p=json?.data?.properties?.parameter;
   if(!p?.T2M||!p?.PRECTOTCORR||!p?.ALLSKY_SFC_SW_DWN)throw new Error('The response did not contain all requested variables.');
   const years=Array.from({length:6},(_,i)=>2019+i);
   const byYear=Object.fromEntries(years.map(y=>[y,Array.from({length:12},()=>({t:0,tn:0,r:0,s:0,sn:0}))]));
