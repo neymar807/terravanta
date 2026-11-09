@@ -122,7 +122,7 @@ async def current_and_forecast(
         "latitude": lat,
         "longitude": lon,
         "current": "temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m",
-        "hourly": "soil_moisture_0_to_7cm,soil_temperature_0cm,evapotranspiration",
+        "hourly": "soil_moisture_0_to_1cm,soil_moisture_9_to_27cm,soil_moisture_27_to_81cm,soil_temperature_0cm,evapotranspiration",
         "daily": "temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,et0_fao_evapotranspiration",
         "forecast_days": 7,
         "timezone": "auto",
