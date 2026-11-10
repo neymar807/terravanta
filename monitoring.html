@@ -7,6 +7,8 @@
 <title>Field Monitoring | TerraVanta</title>
 <style>
 :root{--bg:#f4f5ef;--ink:#17271f;--muted:#68756d;--green:#1e5a42;--lime:#c8df8b;--line:#dce2d8;--card:#fff;--amber:#9b6421;--red:#9b4035}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 Inter,system-ui,sans-serif}button,select{font:inherit}.top{background:#10271f;color:#fff;padding:16px max(22px,calc((100% - 1160px)/2));display:flex;justify-content:space-between;align-items:center;gap:18px}.brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.05em}.mark{width:34px;height:34px;border-radius:11px;background:var(--lime);color:#173b2b;display:grid;place-items:center}.nav{display:flex;gap:16px;flex-wrap:wrap}.nav a{color:#d9e6dc;text-decoration:none;font-size:13px}.nav a[aria-current=page]{color:var(--lime);font-weight:800}.hero{background:linear-gradient(115deg,#10271f,#1b4937);color:white;padding:44px max(22px,calc((100% - 1160px)/2))}.eyebrow{color:var(--lime);font-size:12px;letter-spacing:.15em;text-transform:uppercase;font-weight:800}.hero h1{font-size:clamp(32px,5vw,52px);line-height:1.08;margin:12px 0}.hero p{max-width:760px;color:#d0ddd4}.wrap{max-width:1160px;margin:auto;padding:28px 22px 65px}.controls{display:flex;gap:10px;align-items:end;flex-wrap:wrap}.field{display:grid;gap:5px}.field label{font-size:12px;font-weight:800;color:var(--muted)}select,.btn{padding:11px 13px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--ink)}.btn{background:var(--green);color:white;border:0;font-weight:700;cursor:pointer}.btn:disabled{opacity:.6}.status{font-size:13px;color:var(--muted);min-height:24px;margin:14px 0}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:19px;box-shadow:0 4px 18px #173b2b08}.card h2,.card h3{margin:0 0 5px}.label{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:800}.metric{font-size:32px;font-weight:800;margin:7px 0 2px}.note,.sub{font-size:13px;color:var(--muted)}.wide{grid-column:span 2}.section{margin-top:20px}.section-title{margin:0 0 12px;font-size:22px}.sat{width:100%;display:block;min-height:260px;object-fit:cover;background:#e8eee6;border-radius:10px}.info-visual{width:100%;height:auto;display:block;background:#f7faf5;border:1px solid #e2e9df;border-radius:12px;margin:12px 0}.forecast-chart{width:100%;height:230px;display:block}.forecast-chart text{font-size:11px;fill:#68756d}.forecast-chart .gridline{stroke:#e1e8df}.forecast-chart .rainbar{fill:#a8c879}.forecast-chart .temp-line{fill:none;stroke:#1e7654;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.forecast-chart [tabindex]{cursor:crosshair}.notice{background:#edf3e7;border:1px solid #d8e5ca;border-radius:13px;padding:16px 18px;margin:16px 0;color:#344d3c}.notice strong{display:block;margin-bottom:4px}.risk{font-weight:800}.watch{color:var(--amber)}.alert{color:var(--red)}.good{color:#326b49}.table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}.table th,.table td{text-align:left;padding:9px 7px;border-bottom:1px solid var(--line);white-space:nowrap}.table th{font-size:11px;text-transform:uppercase;color:var(--muted)}.tablewrap{overflow-x:auto}.foot{border-top:1px solid var(--line);padding:22px;text-align:center;color:var(--muted);font-size:12px}.foot a{color:var(--green)}@media(max-width:760px){.grid{grid-template-columns:1fr}.wide{grid-column:auto}.top{align-items:flex-start;flex-direction:column}}
+
+.tv2026{margin:24px 0;padding:22px}.tv26head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}.tv26head h2{margin:8px 0 3px;font-size:23px}.tv26head p,.tv26note{color:var(--muted);font-size:13px}.tv26tag{display:inline-block;background:#eef3e9;color:#31543d;padding:4px 9px;border-radius:99px;font-size:11px;font-weight:800;letter-spacing:.06em}.tv26btn{background:var(--green);color:white;border:0;padding:10px 14px;border-radius:10px;font-weight:700;cursor:pointer}.tv26status{font-size:13px;color:var(--muted);min-height:20px}.tv26grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:16px 0}.tv26grid>div{background:#f6f8f3;border:1px solid var(--line);border-radius:11px;padding:14px}.tv26grid small,.tv26grid span{display:block;color:var(--muted);font-size:11px}.tv26grid strong{display:block;font-size:25px;margin:6px 0 3px}.tv26months{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.tv26month{display:flex;justify-content:space-between;gap:8px;background:#f6f8f3;border-radius:8px;padding:8px 10px;font-size:13px}.tv26note{line-height:1.55;margin-top:16px}@media(max-width:760px){.tv26grid{grid-template-columns:repeat(2,minmax(0,1fr))}.tv26months{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 </head>
 <body>
@@ -42,7 +44,20 @@
 <div class="card section"><h3>Weather watch indicators</h3><p class="sub">Transparent screening flags for the next seven days. These are not official hazard warnings or crop-specific thresholds.</p><div id="riskSummary" class="note">Waiting for forecast…</div><div class="tablewrap"><table class="table"><thead><tr><th>Indicator</th><th>Forecast signal</th><th>Screening note</th></tr></thead><tbody id="riskRows"></tbody></table></div></div>
 <div class="notice"><strong>How to interpret this dashboard</strong>Hot-day screening uses a simple 35°C daily maximum threshold; low-rain screening uses less than 5 mm total over seven days; high-gust screening uses 40 km/h. These are illustrative watch thresholds for this prototype, not validated local agricultural risk thresholds. Local advisories, crop stage, soil, irrigation access and farm records matter.</div>
 <div class="notice"><strong>Data sources & limitations</strong>Satellite image: NASA GIBS / MODIS Terra. Forecast and soil moisture estimates: Open-Meteo. Forecasts change as models update and are not observations. Satellite true-colour imagery is not NDVI. Regional grid estimates do not replace field sensors or local agricultural advice.</div>
-</main>
+
+<section class="card tv2026" aria-live="polite">
+ <div class="tv26head"><div><span class="tv26tag">NASA POWER · 2026 YEAR TO DATE</span><h2>2026 climate observations</h2><p>Daily observations from 1 January 2026 through 10 November 2026, subject to NASA POWER data availability.</p></div><button class="tv26btn" id="tv26refresh" type="button">Refresh 2026 data</button></div>
+ <p id="tv26status" class="tv26status" role="status">Requesting 2026 observations from NASA POWER…</p>
+ <div class="tv26grid">
+  <div><small>Mean air temperature</small><strong id="tv26temp">—</strong><span>°C · T2M daily mean</span></div>
+  <div><small>Hot days</small><strong id="tv26hot">—</strong><span>Days with T2M_MAX ≥ 35°C</span></div>
+  <div><small>Total precipitation</small><strong id="tv26rain">—</strong><span>mm · sum of daily values</span></div>
+  <div><small>Mean solar energy</small><strong id="tv26solar">—</strong><span>MJ/m²/day · daily mean</span></div>
+  <div><small>Valid daily records</small><strong id="tv26coverage">—</strong><span>Available dates returned by NASA</span></div>
+ </div>
+ <h3>2026 monthly precipitation to date</h3><div id="tv26months" class="tv26months">Waiting for NASA POWER…</div>
+ <p class="tv26note">Source: NASA POWER Daily API (T2M, T2M_MAX, PRECTOTCORR, ALLSKY_SFC_SW_DWN). These are gridded regional estimates, not measurements from an individual farm. The final month may be incomplete; the displayed record count shows available dates. A 35°C count is descriptive, not a crop-specific stress diagnosis. No sample values are substituted if the request fails.</p>
+</section></main>
 <footer class="foot">Independent student project; not affiliated with or endorsed by NASA. Sources: <a href="https://nasa-gibs.github.io/gibs-api-docs/" target="_blank" rel="noreferrer">NASA GIBS documentation</a> · <a href="https://open-meteo.com/en/docs" target="_blank" rel="noreferrer">Open-Meteo API documentation</a>.</footer>
 <script>
 const $=id=>document.getElementById(id);
@@ -65,4 +80,60 @@ function load(){
 }
 $('refresh').addEventListener('click',load);$('place').addEventListener('change',load);load();
 </script>
-</body></html>
+
+<script>
+(()=>{
+ const ids=['temp','hot','rain','solar','coverage'];
+ const set=(id,v)=>{const e=document.getElementById('tv26'+id);if(e)e.textContent=v;};
+ const status=(s,bad=false)=>{const e=document.getElementById('tv26status');if(e){e.textContent=s;e.style.color=bad?'#9b422d':'';}};
+ const places={"Quetta, Pakistan":[30.1798,66.975],"Lahore, Pakistan":[31.5204,74.3587],"Karachi, Pakistan":[24.8607,67.0011],"Islamabad, Pakistan":[33.6844,73.0479],"Fresno, California, USA":[36.7378,-119.7871],"Phoenix, Arizona, USA":[33.4484,-112.074],"Ludhiana, India":[30.901,75.8573],"Harbin, China":[45.8038,126.535],"Toowoomba, Australia":[-27.5598,151.9507],"Nakuru, Kenya":[-0.3031,36.08]};
+ function coords(){
+  const sel=document.getElementById('place');
+  if(!sel)return null;
+  const raw=sel.value||'';
+  if(raw.includes(',')){const a=raw.split(',').map(Number);if(a.length===2&&a.every(Number.isFinite))return a;}
+  const name=sel.selectedOptions?.[0]?.text||raw;
+  return places[name]||places[raw]||null;
+ }
+ async function load(){
+  const c=coords();
+  if(!c){status('Could not identify the selected location for the 2026 data panel.',true);return;}
+  status('Requesting 2026 year-to-date observations from NASA POWER…');
+  ids.forEach(k=>set(k,'…'));
+  const months=Array.from({length:12},(_,i)=>({name:new Date(2026,i,1).toLocaleString('en',{month:'short'}),sum:0,count:0}));
+  try{
+   const u=new URL('https://power.larc.nasa.gov/api/temporal/daily/point');
+   u.search=new URLSearchParams({parameters:'T2M,T2M_MAX,PRECTOTCORR,ALLSKY_SFC_SW_DWN',community:'AG',longitude:String(c[1]),latitude:String(c[0]),start:'20260101',end:'20261110',format:'JSON','time-standard':'LST'});
+   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),45000);
+   let res;try{res=await fetch(u,{mode:'cors',cache:'no-store',signal:controller.signal});}finally{clearTimeout(timer);}
+   if(!res.ok)throw new Error('NASA POWER returned HTTP '+res.status);
+   const json=await res.json(),p=json?.properties?.parameter||json?.parameter;
+   if(!p?.T2M||!p?.T2M_MAX||!p?.PRECTOTCORR||!p?.ALLSKY_SFC_SW_DWN)throw new Error('NASA response is missing one or more requested parameters.');
+   const valid=v=>Number.isFinite(Number(v))&&Number(v)>-900;
+   const keys=Object.keys(p.T2M).sort();
+   const avg=(a)=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null;
+   const t=keys.map(k=>p.T2M[k]).filter(valid).map(Number);
+   const mx=keys.map(k=>p.T2M_MAX[k]).filter(valid).map(Number);
+   const r=keys.map(k=>p.PRECTOTCORR[k]).filter(valid).map(Number);
+   const s=keys.map(k=>p.ALLSKY_SFC_SW_DWN[k]).filter(valid).map(Number);
+   if(!t.length||!mx.length||!r.length)throw new Error('No usable daily values were returned.');
+   keys.forEach(k=>{const m=Number(k.slice(4,6))-1,v=p.PRECTOTCORR[k];if(m>=0&&m<12&&valid(v)){months[m].sum+=Number(v);months[m].count++;}});
+   set('temp',avg(t).toFixed(1)+' °C');
+   set('hot',String(keys.filter(k=>valid(p.T2M_MAX[k])&&Number(p.T2M_MAX[k])>=35).length));
+   set('rain',r.reduce((a,b)=>a+b,0).toFixed(1)+' mm');
+   set('solar',s.length?avg(s).toFixed(2):'N/A');
+   set('coverage',String(keys.length));
+   const box=document.getElementById('tv26months');
+   if(box)box.innerHTML=months.map(m=>'<div class="tv26month"><strong>'+m.name+'</strong><span>'+m.sum.toFixed(1)+' mm</span></div>').join('');
+   status('NASA POWER 2026 data loaded for the selected location. Available daily records: '+keys.length+'. Last requested date: 10 November 2026.');
+  }catch(e){
+   ids.forEach(k=>set(k,'N/A'));
+   const box=document.getElementById('tv26months');if(box)box.textContent='Monthly totals unavailable because NASA POWER data could not be loaded. No sample values are substituted.';
+   status((e.name==='AbortError'?'NASA POWER request timed out after 45 seconds.':e.message||'Network error')+' Check your connection and refresh later.',true);
+  }
+ }
+ document.getElementById('tv26refresh')?.addEventListener('click',load);
+ document.getElementById('place')?.addEventListener('change',load);
+ load();
+})();
+</script></body></html>
