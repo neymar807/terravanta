@@ -48,7 +48,10 @@ const $=id=>document.getElementById(id);
 const fmt=(v,d=1)=>Number(v).toFixed(d);
 function setStatus(id,text,kind=''){const e=$(id);e.textContent=text;e.className='pill '+kind;}
 async function loadNASA(){
- const place=$('place').value, [lat,lon]=locations[place];
+ const place=$('place').value;
+ const coords=locations[place];
+ if(!coords){$('status').textContent='Location coordinates were not found for '+place+'.';$('status').className='status error';return;}
+ const [lat,lon]=coords;
  $('meanTemp').textContent=$('hotDays').textContent=$('annualRain').textContent=$('rainCv').textContent=$('coverage').textContent='…';
  $('monthlyRain').textContent='Fetching daily observations from NASA POWER…';
  $('status').textContent='Requesting NASA POWER daily observations for '+place+' (2025)…';
@@ -56,7 +59,11 @@ async function loadNASA(){
  try{
   const url=new URL('https://power.larc.nasa.gov/api/temporal/daily/point');
   url.search=new URLSearchParams({parameters:'T2M,T2M_MAX,PRECTOTCORR',community:'AG',longitude:String(lon),latitude:String(lat),start:'20250101',end:'20251231',format:'JSON','time-standard':'LST'});
-  const response=await fetch(url.toString());
+  const controller=new AbortController();
+  const timeout=setTimeout(()=>controller.abort(),45000);
+  let response;
+  try{response=await fetch(url.toString(),{signal:controller.signal,mode:'cors',cache:'no-store'});}
+  finally{clearTimeout(timeout);}
   if(!response.ok) throw new Error('NASA POWER returned HTTP '+response.status);
   const json=await response.json();
   const p=json?.properties?.parameter || json?.parameter;
@@ -88,9 +95,11 @@ async function loadNASA(){
   setStatus('variabilityStatus','Calculated from monthly totals');
   $('status').textContent='NASA POWER data loaded for '+place+'. Period: 1 Jan–31 Dec 2025. Data source: NASA POWER.';
  }catch(err){
-  $('status').textContent='Could not load NASA POWER data: '+err.message+'. Check your connection and try again.';
+  const reason=err.name==='AbortError'?'NASA POWER did not respond within 45 seconds.':(err.message||'Network or browser access error');
+  $('status').textContent='Could not load NASA POWER data: '+reason+' Check your internet connection or try again later.';
   $('status').className='status error';
   $('monthlyRain').textContent='NASA data unavailable. No sample values are substituted.';
+  ['meanTemp','hotDays','annualRain','rainCv','coverage'].forEach(id=>$(id).textContent='N/A');
   ['tempStatus','heatStatus','rainStatus','variabilityStatus'].forEach(id=>setStatus(id,'Data unavailable'));
  }
 }
