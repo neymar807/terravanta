@@ -17,6 +17,7 @@
 <section class="hero"><div class="eyebrow">NASA POWER · Observed climate data</div><h1>Explore real climate observations for agricultural regions.</h1><p>Explore NASA POWER daily temperature and precipitation observations for selected locations.</p></section>
 <main class="wrap">
 <div class="head"><div><span class="tag">NASA POWER · 2025 OBSERVATIONS</span><h2 style="margin-top:8px">NASA climate observations</h2><p>Choose a location to request NASA POWER observations for 2025.</p></div><select id="place" class="select" aria-label="Choose demonstration location"><option>Quetta, Pakistan</option><option>Lahore, Pakistan</option><option>Karachi, Pakistan</option><option>Islamabad, Pakistan</option><option>Fresno, California, USA</option><option>Phoenix, Arizona, USA</option><option>Ludhiana, India</option><option>Harbin, China</option><option>Toowoomba, Australia</option><option>Nakuru, Kenya</option></select></div>
+<p id="status" role="status" aria-live="polite" style="margin:12px 0;color:#526158;font-size:13px">Connecting to NASA POWER…</p>
 <div class="notice"><strong>Data interpretation</strong>These are NASA POWER gridded/reanalysis climate observations for the selected coordinates, not measurements taken on a particular farm. The 35°C hot-day count is a simple descriptive threshold and is not a crop-specific heat-stress diagnosis. Precipitation does not measure irrigation access, groundwater, soil moisture, or drought impacts.</div>
 <section class="grid" aria-live="polite">
 <div class="card"><div class="label">NASA mean air temperature</div><div class="score" id="meanTemp">—</div><span class="pill" id="tempStatus">Waiting for NASA data</span><p class="muted">Daily mean 2-metre air temperature averaged across 2025 (°C).</p></div>
@@ -65,7 +66,7 @@ const fmt=(v,d=1)=>Number(v).toFixed(d);
 function setStatus(id,text,kind=''){const e=$(id);if(e){e.textContent=text;e.className='pill '+kind;}}
 function monthsLabel(i){return new Date(2025,i,1).toLocaleString('en',{month:'short'});}
 function showFailure(message){
- $('status').textContent=message;$('status').className='status error';
+ const status=$('status');if(status){status.textContent=message;status.style.color='#9b422d';}
  $('monthlyRain').textContent='2025 rainfall breakdown unavailable because the shared NASA POWER request failed.';
  ['meanTemp','hotDays','annualRain','rainCv','coverage'].forEach(id=>$(id).textContent='N/A');
  ['tempStatus','heatStatus','rainStatus','variabilityStatus'].forEach(id=>setStatus(id,'Data unavailable'));
@@ -109,7 +110,7 @@ async function loadNASA(){
   $('coverageNote').textContent='Valid 2025 daily records — T2M: '+t25.length+', T2M_MAX: '+mx25.length+', precipitation: '+r25.length+'.';
   $('monthlyRain').innerHTML=monthly25.map((m,i)=>'<div class="risk-row"><strong>'+monthsLabel(i)+'</strong><span>'+(m.count?fmt(m.sum,1)+' mm':'N/A · no valid data')+'</span></div>').join('');
   setStatus('tempStatus',t25.length?'NASA POWER · 2025':'No valid T2M values');setStatus('heatStatus',mx25.length?'Counted from valid daily maximums':'No valid maximum-temperature values');setStatus('rainStatus',r25.length?'Summed valid daily values':'No valid precipitation values');setStatus('variabilityStatus',observed.length?'Based on '+observed.length+' months with valid data':'Insufficient monthly data');
-  $('status').textContent='Shared NASA POWER request succeeded for '+place+'. 2025 scorecard processed; 2026 panel uses the same response.';
+  $('status').textContent='NASA POWER data loaded successfully for '+place+'. Both panels use the same response.';$('status').style.color='#31543d';
   const y26keys=keys.filter(k=>k.startsWith('2026')),t26=values(p.T2M,2026),mx26=values(p.T2M_MAX,2026),r26=values(p.PRECTOTCORR,2026),s26=values(p.ALLSKY_SFC_SW_DWN,2026);
   $('tv26temp').textContent=avg(t26)===null?'N/A':fmt(avg(t26))+' °C';
   $('tv26hot').textContent=mx26.length?String(y26keys.filter(k=>valid(p.T2M_MAX?.[k])&&Number(p.T2M_MAX[k])>=35).length):'N/A';
