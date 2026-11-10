@@ -91,7 +91,7 @@ async function loadNASA(){
   $('coverageNote').textContent='Valid daily records — T2M: '+t.length+', T2M_MAX: '+keys.filter(k=>valid(p.T2M_MAX[k])).length+', precipitation: '+r.length+'.';
   $('monthlyRain').innerHTML=monthly.map((m,i)=>'<div class="risk-row"><strong>'+monthsLabel(i)+'</strong><span>'+(m.count?fmt(m.sum,1)+' mm':'N/A · no valid data')+'</span></div>').join('');
   setStatus('tempStatus','NASA POWER · 2025');setStatus('heatStatus','Counted from valid daily maximums');setStatus('rainStatus','Summed valid daily values');setStatus('variabilityStatus','Based on months with valid data');
-  $('status').textContent='NASA POWER data loaded for '+place.+' Period: 1 Jan–31 Dec 2025.';
+  $('status').textContent='NASA POWER data loaded for '+place+'. Period: 1 Jan–31 Dec 2025.';
  }catch(err){
   $('status').textContent='Could not load NASA POWER data: '+(err.name==='AbortError'?'request timed out':err.message||'network error')+'. No sample values substituted.';$('status').className='status error';
   $('monthlyRain').textContent='NASA data unavailable. No sample values are substituted.';
