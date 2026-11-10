@@ -64,19 +64,12 @@ const $=id=>document.getElementById(id);
 function load(){
  const place=$('place').selectedOptions[0].text;
  $('satellite').removeAttribute('src');
- $('satellite').alt='Live satellite imagery is disabled in this demonstration version. See the explanatory diagram above or open NASA Worldview separately.';
- $('sm1').textContent='0.142 m³/m³';$('sm2').textContent='0.186 m³/m³';$('sm3').textContent='0.213 m³/m³';
- $('maxTemp').textContent='34.2°';$('rainTotal').textContent='3.8 mm';$('windMax').textContent='32 km/h';
- const dates=['Day 1','Day 2','Day 3','Day 4','Day 5','Day 6','Day 7'],temps=[30,31,33,34,32,31,30],rains=[0,0.4,1.2,0,0.8,0.6,0.8];
- const chart=$('forecastChart'),W=760,H=230,L=46,R=18,T=18,B=35,pw=W-L-R,ph=H-T-B,slot=pw/7;let svg='';
- for(let i=0;i<=4;i++){const y=T+i*ph/4;svg+='<line class="gridline" x1="'+L+'" y1="'+y+'" x2="'+(W-R)+'" y2="'+y+'"/>'}
- const pts=[];temps.forEach((v,i)=>{const x=L+slot*(i+.5),bh=Math.max(1,rains[i]/1.5*ph),y=T+ph-bh;svg+='<rect class="rainbar" tabindex="0" x="'+(x-slot*.24)+'" y="'+y+'" width="'+(slot*.48)+'" height="'+bh+'" rx="4"><title>'+dates[i]+': '+rains[i].toFixed(1)+' mm sample precipitation</title></rect>';const ty=T+ph-(v-25)/15*ph;pts.push([x,ty]);svg+='<text x="'+x+'" y="'+(H-9)+'" text-anchor="middle">'+dates[i]+'</text>'});
- svg+='<polyline class="temp-line" points="'+pts.map(p=>p.join(',')).join(' ')+'"/>';pts.forEach((p,i)=>svg+='<circle tabindex="0" cx="'+p[0]+'" cy="'+p[1]+'" r="5" fill="#1e7654"><title>'+dates[i]+': '+temps[i]+' °C sample maximum</title></circle>');
- svg+='<text x="8" y="16">Rain mm</text><text x="'+(W-10)+'" y="16" text-anchor="end">Temp °C</text>';chart.innerHTML=svg;
- $('riskSummary').innerHTML='<strong class="good">Demonstration scenario:</strong> No illustrative watch thresholds are crossed in this sample dataset. This is not a current forecast.';
- const rows=[['Hot days','≥35°C on 0 day(s)','No sample hot-day threshold crossed.'],['Seven-day rainfall','3.8 mm','Sample total is below the prototype threshold.'],['Maximum wind gust','32 km/h','Sample gust is below the prototype threshold.']];
- $('riskRows').innerHTML=rows.map(r=>'<tr><td>'+r[0]+'</td><td>'+r[1]+'</td><td>'+r[2]+'</td></tr>').join('');
- $('status').textContent='Demonstration values loaded for '+place+'. Live forecast and satellite requests are disabled.';
+ $('satellite').alt='Satellite imagery is not connected in this version. No satellite observation is displayed.';
+ ['sm1','sm2','sm3','maxTemp','rainTotal','windMax'].forEach(id=>$(id).textContent='N/A');
+ $('forecastChart').innerHTML='';
+ $('riskSummary').textContent='No live forecast or field sensor feed is connected. Risk status is unavailable; no demonstration thresholds are applied.';
+ $('riskRows').innerHTML=[['Soil moisture','Unavailable','No field sensor or verified soil-moisture feed connected.'],['Seven-day rainfall','Unavailable','A live forecast source is not connected.'],['Maximum wind gust','Unavailable','A live forecast source is not connected.']].map(r=>'<tr><td>'+r[0]+'</td><td>'+r[1]+'</td><td>'+r[2]+'</td></tr>').join('');
+ $('status').textContent='Field monitoring data unavailable for '+place+'. Soil moisture, satellite imagery and seven-day forecast are not connected; no sample values are shown.';
 }
 $('refresh').addEventListener('click',load);$('place').addEventListener('change',load);load();
 </script>
