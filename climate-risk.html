@@ -63,61 +63,43 @@ const $=id=>document.getElementById(id);
 const fmt=(v,d=1)=>Number(v).toFixed(d);
 function setStatus(id,text,kind=''){const e=$(id);e.textContent=text;e.className='pill '+kind;}
 async function loadNASA(){
- const place=$('place').value;
- const coords=locations[place];
- if(!coords){$('status').textContent='Location coordinates were not found for '+place+'.';$('status').className='status error';return;}
+ const place=$('place').value,coords=locations[place];
+ if(!coords){$('status').textContent='Location coordinates unavailable for '+place+'.';$('status').className='status error';return;}
  const [lat,lon]=coords;
- $('meanTemp').textContent=$('hotDays').textContent=$('annualRain').textContent=$('rainCv').textContent=$('coverage').textContent='…';
- $('monthlyRain').textContent='Fetching daily observations from NASA POWER…';
- $('status').textContent='Requesting NASA POWER daily observations for '+place+' (2025)…';
- $('status').className='status';
+ ['meanTemp','hotDays','annualRain','rainCv','coverage'].forEach(id=>$(id).textContent='…');
+ $('monthlyRain').textContent='Fetching NASA POWER daily observations…';
+ $('status').textContent='Requesting NASA POWER daily observations for '+place+' (2025)…';$('status').className='status';
  try{
-  const url=new URL('https://power.larc.nasa.gov/api/temporal/daily/point');
-  url.search=new URLSearchParams({parameters:'T2M,T2M_MAX,PRECTOTCORR',community:'AG',longitude:String(lon),latitude:String(lat),start:'20250101',end:'20251231',format:'JSON','time-standard':'LST'});
-  const controller=new AbortController();
-  const timeout=setTimeout(()=>controller.abort(),45000);
-  let response;
-  try{response=await fetch(url.toString(),{signal:controller.signal,mode:'cors',cache:'no-store'});}
-  finally{clearTimeout(timeout);}
-  if(!response.ok) throw new Error('NASA POWER returned HTTP '+response.status);
-  const json=await response.json();
-  const p=json?.properties?.parameter || json?.parameter;
-  if(!p?.T2M || !p?.T2M_MAX || !p?.PRECTOTCORR) throw new Error('NASA POWER response did not include all requested parameters.');
-  const keys=Object.keys(p.T2M).sort();
-  const valid=(v)=>Number.isFinite(Number(v)) && Number(v)>-900;
-  const temps=keys.map(k=>p.T2M[k]).filter(valid).map(Number);
-  const maxTemps=keys.map(k=>p.T2M_MAX[k]).filter(valid).map(Number);
-  const rain=keys.map(k=>p.PRECTOTCORR[k]).filter(valid).map(Number);
-  if(!temps.length || !rain.length || !maxTemps.length) throw new Error('No usable daily values were returned for one or more parameters.');
-  const avg=temps.reduce((a,b)=>a+b,0)/temps.length;
-  const hot=keys.filter(k=>valid(p.T2M_MAX[k]) && Number(p.T2M_MAX[k])>=35).length;
-  const rainTotal=rain.reduce((a,b)=>a+b,0);
-  const months=Array.from({length:12},(_,i)=>({name:new Date(2025,i,1).toLocaleString('en',{month:'short'}),total:0}));
-  keys.forEach(k=>{const month=Number(k.slice(4,6))-1;const v=p.PRECTOTCORR[k];if(month>=0&&month<12&&valid(v))months[month].total+=Number(v);});
-  const vals=months.map(m=>m.total), mean=vals.reduce((a,b)=>a+b,0)/12;
-  const sd=Math.sqrt(vals.reduce((a,b)=>a+(b-mean)**2,0)/12);
-  const cv=mean>0?sd/mean*100:NaN;
-  $('meanTemp').textContent=fmt(avg)+' °C';
-  $('hotDays').textContent=String(hot);
-  $('annualRain').textContent=fmt(rainTotal,0)+' mm';
+  const u=new URL('https://power.larc.nasa.gov/api/temporal/daily/point');
+  u.search=new URLSearchParams({parameters:'T2M,T2M_MAX,PRECTOTCORR',community:'AG',longitude:String(lon),latitude:String(lat),start:'20250101',end:'20251231',format:'JSON','time-standard':'LST'});
+  const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),45000);let res;
+  try{res=await fetch(u,{signal:ctl.signal,cache:'no-store'});}finally{clearTimeout(timer);}
+  if(!res.ok)throw new Error('NASA POWER HTTP '+res.status);
+  const p=(await res.json())?.properties?.parameter,valid=v=>Number.isFinite(Number(v))&&Number(v)>-900;
+  if(!p?.T2M||!p?.T2M_MAX||!p?.PRECTOTCORR)throw new Error('Required NASA parameters missing');
+  const keys=Object.keys(p.T2M).sort(),t=keys.map(k=>p.T2M[k]).filter(valid).map(Number),r=keys.map(k=>p.PRECTOTCORR[k]).filter(valid).map(Number);
+  const hot=keys.filter(k=>valid(p.T2M_MAX[k])&&Number(p.T2M_MAX[k])>=35).length;
+  if(!t.length||!r.length)throw new Error('No valid temperature or precipitation observations returned');
+  const monthly=Array.from({length:12},()=>({sum:0,count:0}));
+  keys.forEach(k=>{const m=+k.slice(4,6)-1,v=p.PRECTOTCORR[k];if(m>=0&&m<12&&valid(v)){monthly[m].sum+=Number(v);monthly[m].count++;}});
+  const observed=monthly.filter(m=>m.count>0).map(m=>m.sum),mean=observed.length?observed.reduce((a,b)=>a+b,0)/observed.length:0;
+  const sd=observed.length?Math.sqrt(observed.reduce((a,b)=>a+(b-mean)**2,0)/observed.length):NaN,cv=mean>0?sd/mean*100:NaN;
+  $('meanTemp').textContent=fmt(t.reduce((a,b)=>a+b,0)/t.length)+' °C';
+  $('hotDays').textContent=String(hot);$('annualRain').textContent=fmt(r.reduce((a,b)=>a+b,0),1)+' mm';
   $('rainCv').textContent=Number.isFinite(cv)?fmt(cv)+'%':'N/A';
-  $('coverage').textContent=String(keys.length);
-  $('coverageNote').textContent='Daily dates returned; valid values — T2M: '+temps.length+', T2M_MAX: '+maxTemps.length+', precipitation: '+rain.length+'.';
-  $('monthlyRain').innerHTML=months.map(m=>'<div class="risk-row"><strong>'+m.name+'</strong><span>'+fmt(m.total,1)+' mm</span></div>').join('');
-  setStatus('tempStatus','NASA POWER · 2025');
-  setStatus('heatStatus','Counted from NASA daily maximums');
-  setStatus('rainStatus','Summed from NASA daily values');
-  setStatus('variabilityStatus','Calculated from monthly totals');
-  $('status').textContent='NASA POWER data loaded for '+place+'. Period: 1 Jan–31 Dec 2025. Data source: NASA POWER.';
+  $('coverage').textContent=t.length+' / '+keys.length;
+  $('coverageNote').textContent='Valid daily records — T2M: '+t.length+', T2M_MAX: '+keys.filter(k=>valid(p.T2M_MAX[k])).length+', precipitation: '+r.length+'.';
+  $('monthlyRain').innerHTML=monthly.map((m,i)=>'<div class="risk-row"><strong>'+monthsLabel(i)+'</strong><span>'+(m.count?fmt(m.sum,1)+' mm':'N/A · no valid data')+'</span></div>').join('');
+  setStatus('tempStatus','NASA POWER · 2025');setStatus('heatStatus','Counted from valid daily maximums');setStatus('rainStatus','Summed valid daily values');setStatus('variabilityStatus','Based on months with valid data');
+  $('status').textContent='NASA POWER data loaded for '+place.+' Period: 1 Jan–31 Dec 2025.';
  }catch(err){
-  const reason=err.name==='AbortError'?'NASA POWER did not respond within 45 seconds.':(err.message||'Network or browser access error');
-  $('status').textContent='Could not load NASA POWER data: '+reason+' Check your internet connection or try again later.';
-  $('status').className='status error';
+  $('status').textContent='Could not load NASA POWER data: '+(err.name==='AbortError'?'request timed out':err.message||'network error')+'. No sample values substituted.';$('status').className='status error';
   $('monthlyRain').textContent='NASA data unavailable. No sample values are substituted.';
   ['meanTemp','hotDays','annualRain','rainCv','coverage'].forEach(id=>$(id).textContent='N/A');
   ['tempStatus','heatStatus','rainStatus','variabilityStatus'].forEach(id=>setStatus(id,'Data unavailable'));
  }
 }
+function monthsLabel(i){return new Date(2025,i,1).toLocaleString('en',{month:'short'});}
 $('place').addEventListener('change',loadNASA);
 loadNASA();
 </script>
