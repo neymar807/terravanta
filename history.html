@@ -17,7 +17,7 @@
 <div class="notice"><strong>Data limitations</strong>NASA POWER provides gridded regional estimates, not measurements from an individual farm. The available comparison period on this page is 2019–2024. Missing or incomplete daily records can affect annual and monthly summaries. This page does not forecast weather or prescribe crops or irrigation.</div>
 
 <section class="card tv2026" aria-live="polite">
- <div class="tv26head"><div><span class="tv26tag">NASA POWER · 2026 YEAR TO DATE</span><h2>2026 climate observations</h2><p>Daily observations from 1 January 2026 through 10 November 2026, subject to NASA POWER data availability.</p></div><button class="tv26btn" id="tv26refresh" type="button">Refresh 2026 data</button></div>
+ <div class="tv26head"><div><span class="tv26tag">NASA POWER · 2026 YEAR TO DATE</span><h2>2026 climate observations</h2><p>Daily observations from 1 January 2026 through the latest requested date, subject to NASA POWER data availability.</p></div><button class="tv26btn" id="tv26refresh" type="button">Refresh 2026 data</button></div>
  <p id="tv26status" class="tv26status" role="status">Requesting 2026 observations from NASA POWER…</p>
  <div class="tv26grid">
   <div><small>Mean air temperature</small><strong id="tv26temp">—</strong><span>°C · T2M daily mean</span></div>
@@ -80,7 +80,7 @@ $('load').addEventListener('click',load);$('place').addEventListener('change',lo
   const months=Array.from({length:12},(_,i)=>({name:new Date(2026,i,1).toLocaleString('en',{month:'short'}),sum:0,count:0}));
   try{
    const u=new URL('https://power.larc.nasa.gov/api/temporal/daily/point');
-   u.search=new URLSearchParams({parameters:'T2M,T2M_MAX,PRECTOTCORR,ALLSKY_SFC_SW_DWN',community:'AG',longitude:String(c[1]),latitude:String(c[0]),start:'20260101',end:'20261110',format:'JSON','time-standard':'LST'});
+   u.search=new URLSearchParams({parameters:'T2M,T2M_MAX,PRECTOTCORR,ALLSKY_SFC_SW_DWN',community:'AG',longitude:String(c[1]),latitude:String(c[0]),start:'20260101',end:new Date().toISOString().slice(0,10).replaceAll('-',''),format:'JSON','time-standard':'LST'});
    const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),45000);
    let res;try{res=await fetch(u,{mode:'cors',cache:'no-store',signal:controller.signal});}finally{clearTimeout(timer);}
    if(!res.ok)throw new Error('NASA POWER returned HTTP '+res.status);
@@ -99,10 +99,10 @@ $('load').addEventListener('click',load);$('place').addEventListener('change',lo
    set('hot',String(keys.filter(k=>valid(p.T2M_MAX[k])&&Number(p.T2M_MAX[k])>=35).length));
    set('rain',r.reduce((a,b)=>a+b,0).toFixed(1)+' mm');
    set('solar',s.length?avg(s).toFixed(2):'N/A');
-   set('coverage',String(keys.length));
+   set('coverage',String(t.length));
    const box=document.getElementById('tv26months');
    if(box)box.innerHTML=months.map(m=>'<div class="tv26month"><strong>'+m.name+'</strong><span>'+m.sum.toFixed(1)+' mm</span></div>').join('');
-   status('NASA POWER 2026 data loaded for the selected location. Available daily records: '+keys.length+'. Last requested date: 10 November 2026.');
+   status('NASA POWER 2026 data loaded for the selected location. Valid T2M daily records: '+t.length+'. Valid parameter counts — T2M_MAX: '+mx.length+', precipitation: '+r.length+', solar: '+s.length+'.');
   }catch(e){
    ids.forEach(k=>set(k,'N/A'));
    const box=document.getElementById('tv26months');if(box)box.textContent='Monthly totals unavailable because NASA POWER data could not be loaded. No sample values are substituted.';
