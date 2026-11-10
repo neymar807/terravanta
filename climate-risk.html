@@ -60,103 +60,74 @@ const locations={
 'Nakuru, Kenya':[-0.3031,36.0800]
 };
 const $=id=>document.getElementById(id);
+const valid=v=>v!==null&&v!==undefined&&Number.isFinite(Number(v))&&Number(v)>-900;
 const fmt=(v,d=1)=>Number(v).toFixed(d);
-function setStatus(id,text,kind=''){const e=$(id);e.textContent=text;e.className='pill '+kind;}
+function setStatus(id,text,kind=''){const e=$(id);if(e){e.textContent=text;e.className='pill '+kind;}}
+function monthsLabel(i){return new Date(2025,i,1).toLocaleString('en',{month:'short'});}
+function showFailure(message){
+ $('status').textContent=message;$('status').className='status error';
+ $('monthlyRain').textContent='2025 rainfall breakdown unavailable because the shared NASA POWER request failed.';
+ ['meanTemp','hotDays','annualRain','rainCv','coverage'].forEach(id=>$(id).textContent='N/A');
+ ['tempStatus','heatStatus','rainStatus','variabilityStatus'].forEach(id=>setStatus(id,'Data unavailable'));
+ ['temp','hot','rain','solar','coverage'].forEach(id=>{const e=$('tv26'+id);if(e)e.textContent='N/A';});
+ $('tv26months').textContent='2026 monthly totals unavailable because the shared NASA POWER request failed.';
+ $('tv26status').textContent=message;
+ $('tv26status').style.color='#9b422d';
+}
 async function loadNASA(){
  const place=$('place').value,coords=locations[place];
- if(!coords){$('status').textContent='Location coordinates unavailable for '+place+'.';$('status').className='status error';return;}
+ if(!coords){showFailure('Location coordinates are not configured. Please choose another location.');return;}
  const [lat,lon]=coords;
- ['meanTemp','hotDays','annualRain','rainCv','coverage'].forEach(id=>$(id).textContent='…');
- $('monthlyRain').textContent='Fetching NASA POWER daily observations…';
- $('status').textContent='Requesting NASA POWER daily observations for '+place+' (2025)…';$('status').className='status';
+ ['meanTemp','hotDays','annualRain','rainCv','coverage','tv26temp','tv26hot','tv26rain','tv26solar','tv26coverage'].forEach(id=>$(id).textContent='…');
+ $('monthlyRain').textContent='Fetching one shared NASA POWER dataset for 2025 and 2026…';
+ $('tv26months').textContent='Loading 2026 monthly precipitation…';
+ $('status').textContent='Making one NASA POWER request for '+place+' (1 Jan 2025 to today)…';$('status').className='status';
+ $('tv26status').textContent='Using the same NASA POWER request as the 2025 scorecard…';$('tv26status').style.color='';
  try{
+  const today=new Date(),end=today.getFullYear()+String(today.getMonth()+1).padStart(2,'0')+String(today.getDate()).padStart(2,'0');
   const u=new URL('https://power.larc.nasa.gov/api/temporal/daily/point');
-  u.search=new URLSearchParams({parameters:'T2M,T2M_MAX,PRECTOTCORR',community:'AG',longitude:String(lon),latitude:String(lat),start:'20250101',end:'20251231',format:'JSON','time-standard':'LST'});
-  const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),45000);let res;
+  u.search=new URLSearchParams({parameters:'T2M,T2M_MAX,PRECTOTCORR,ALLSKY_SFC_SW_DWN',community:'AG',longitude:String(lon),latitude:String(lat),start:'20250101',end,format:'JSON','time-standard':'LST'});
+  const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),60000);let res;
   try{res=await fetch(u,{signal:ctl.signal,cache:'no-store'});}finally{clearTimeout(timer);}
-  if(!res.ok)throw new Error('NASA POWER HTTP '+res.status);
-  const p=(await res.json())?.properties?.parameter,valid=v=>Number.isFinite(Number(v))&&Number(v)>-900;
-  if(!p?.T2M||!p?.T2M_MAX||!p?.PRECTOTCORR)throw new Error('Required NASA parameters missing');
-  const keys=Object.keys(p.T2M).sort(),t=keys.map(k=>p.T2M[k]).filter(valid).map(Number),r=keys.map(k=>p.PRECTOTCORR[k]).filter(valid).map(Number);
-  const hot=keys.filter(k=>valid(p.T2M_MAX[k])&&Number(p.T2M_MAX[k])>=35).length;
-  if(!t.length||!r.length)throw new Error('No valid temperature or precipitation observations returned');
-  const monthly=Array.from({length:12},()=>({sum:0,count:0}));
-  keys.forEach(k=>{const m=+k.slice(4,6)-1,v=p.PRECTOTCORR[k];if(m>=0&&m<12&&valid(v)){monthly[m].sum+=Number(v);monthly[m].count++;}});
-  const observed=monthly.filter(m=>m.count>0).map(m=>m.sum),mean=observed.length?observed.reduce((a,b)=>a+b,0)/observed.length:0;
-  const sd=observed.length?Math.sqrt(observed.reduce((a,b)=>a+(b-mean)**2,0)/observed.length):NaN,cv=mean>0?sd/mean*100:NaN;
-  $('meanTemp').textContent=fmt(t.reduce((a,b)=>a+b,0)/t.length)+' °C';
-  $('hotDays').textContent=String(hot);$('annualRain').textContent=fmt(r.reduce((a,b)=>a+b,0),1)+' mm';
-  $('rainCv').textContent=Number.isFinite(cv)?fmt(cv)+'%':'N/A';
-  $('coverage').textContent=t.length+' / '+keys.length;
-  $('coverageNote').textContent='Valid daily records — T2M: '+t.length+', T2M_MAX: '+keys.filter(k=>valid(p.T2M_MAX[k])).length+', precipitation: '+r.length+'.';
-  $('monthlyRain').innerHTML=monthly.map((m,i)=>'<div class="risk-row"><strong>'+monthsLabel(i)+'</strong><span>'+(m.count?fmt(m.sum,1)+' mm':'N/A · no valid data')+'</span></div>').join('');
-  setStatus('tempStatus','NASA POWER · 2025');setStatus('heatStatus','Counted from valid daily maximums');setStatus('rainStatus','Summed valid daily values');setStatus('variabilityStatus','Based on months with valid data');
-  $('status').textContent='NASA POWER data loaded for '+place+'. Period: 1 Jan–31 Dec 2025.';
+  if(!res.ok)throw new Error('NASA POWER returned HTTP '+res.status+'. The service may be busy or temporarily unavailable.');
+  const json=await res.json(),p=json?.properties?.parameter;
+  if(!p||typeof p!=='object')throw new Error('NASA POWER returned an unexpected response. Please refresh later.');
+  const keys=Object.keys(p.T2M||{}).sort();
+  if(!keys.length)throw new Error('NASA POWER returned no daily dates for this location and period.');
+  const values=(parameter,year)=>keys.filter(k=>k.startsWith(String(year))).map(k=>parameter?.[k]).filter(valid).map(Number);
+  const sum=a=>a.length?a.reduce((x,y)=>x+y,0):null,avg=a=>a.length?sum(a)/a.length:null;
+  const y25keys=keys.filter(k=>k.startsWith('2025')),t25=values(p.T2M,2025),mx25=values(p.T2M_MAX,2025),r25=values(p.PRECTOTCORR,2025);
+  const monthly25=Array.from({length:12},()=>({sum:0,count:0}));
+  y25keys.forEach(k=>{const m=Number(k.slice(4,6))-1,v=p.PRECTOTCORR?.[k];if(m>=0&&m<12&&valid(v)){monthly25[m].sum+=Number(v);monthly25[m].count++;}});
+  const observed=monthly25.filter(m=>m.count>0).map(m=>m.sum),mean=avg(observed);
+  const sd=mean!==null&&observed.length?Math.sqrt(avg(observed.map(v=>(v-mean)**2))):null,cv=mean>0?sd/mean*100:null;
+  $('meanTemp').textContent=avg(t25)===null?'N/A':fmt(avg(t25))+' °C';
+  $('hotDays').textContent=mx25.length?String(y25keys.filter(k=>valid(p.T2M_MAX?.[k])&&Number(p.T2M_MAX[k])>=35).length):'N/A';
+  $('annualRain').textContent=sum(r25)===null?'N/A':fmt(sum(r25))+' mm';
+  $('rainCv').textContent=cv===null?'N/A':fmt(cv)+'%';
+  $('coverage').textContent=t25.length+' / '+y25keys.length;
+  $('coverageNote').textContent='Valid 2025 daily records — T2M: '+t25.length+', T2M_MAX: '+mx25.length+', precipitation: '+r25.length+'.';
+  $('monthlyRain').innerHTML=monthly25.map((m,i)=>'<div class="risk-row"><strong>'+monthsLabel(i)+'</strong><span>'+(m.count?fmt(m.sum,1)+' mm':'N/A · no valid data')+'</span></div>').join('');
+  setStatus('tempStatus',t25.length?'NASA POWER · 2025':'No valid T2M values');setStatus('heatStatus',mx25.length?'Counted from valid daily maximums':'No valid maximum-temperature values');setStatus('rainStatus',r25.length?'Summed valid daily values':'No valid precipitation values');setStatus('variabilityStatus',observed.length?'Based on '+observed.length+' months with valid data':'Insufficient monthly data');
+  $('status').textContent='Shared NASA POWER request succeeded for '+place+'. 2025 scorecard processed; 2026 panel uses the same response.';
+  const y26keys=keys.filter(k=>k.startsWith('2026')),t26=values(p.T2M,2026),mx26=values(p.T2M_MAX,2026),r26=values(p.PRECTOTCORR,2026),s26=values(p.ALLSKY_SFC_SW_DWN,2026);
+  $('tv26temp').textContent=avg(t26)===null?'N/A':fmt(avg(t26))+' °C';
+  $('tv26hot').textContent=mx26.length?String(y26keys.filter(k=>valid(p.T2M_MAX?.[k])&&Number(p.T2M_MAX[k])>=35).length):'N/A';
+  $('tv26rain').textContent=sum(r26)===null?'N/A':fmt(sum(r26))+' mm';
+  $('tv26solar').textContent=avg(s26)===null?'N/A':fmt(avg(s26),2);
+  $('tv26coverage').textContent=String(t26.length);
+  const monthly26=Array.from({length:12},(_,i)=>({name:new Date(2026,i,1).toLocaleString('en',{month:'short'}),sum:0,count:0}));
+  y26keys.forEach(k=>{const m=Number(k.slice(4,6))-1,v=p.PRECTOTCORR?.[k];if(m>=0&&m<12&&valid(v)){monthly26[m].sum+=Number(v);monthly26[m].count++;}});
+  $('tv26months').innerHTML=monthly26.map(m=>'<div class="tv26month"><strong>'+m.name+'</strong><span>'+(m.count?fmt(m.sum,1)+' mm':'N/A')+'</span></div>').join('');
+  const solarNote=s26.length?' Valid solar records: '+s26.length+'.':' Solar data is not yet available.';
+  $('tv26status').textContent='2026 year-to-date values processed from the shared request. Valid records — T2M: '+t26.length+', T2M_MAX: '+mx26.length+', precipitation: '+r26.length+'.'+solarNote;
+  $('tv26status').style.color=(t26.length||r26.length)?'':'#9b422d';
  }catch(err){
-  $('status').textContent='Could not load NASA POWER data: '+(err.name==='AbortError'?'request timed out':err.message||'network error')+'. No sample values substituted.';$('status').className='status error';
-  $('monthlyRain').textContent='NASA data unavailable. No sample values are substituted.';
-  ['meanTemp','hotDays','annualRain','rainCv','coverage'].forEach(id=>$(id).textContent='N/A');
-  ['tempStatus','heatStatus','rainStatus','variabilityStatus'].forEach(id=>setStatus(id,'Data unavailable'));
+  const reason=err.name==='AbortError'?'The NASA POWER request timed out after 60 seconds.':(err.message||'A network error prevented the request.');
+  showFailure('Could not load NASA POWER data for '+place+'. '+reason+' Check your internet connection and try Refresh 2026 data. No sample values are substituted.');
  }
 }
-function monthsLabel(i){return new Date(2025,i,1).toLocaleString('en',{month:'short'});}
 $('place').addEventListener('change',loadNASA);
+$('tv26refresh').addEventListener('click',loadNASA);
 loadNASA();
-</script>
-
-<script>
-(()=>{
- const ids=['temp','hot','rain','solar','coverage'];
- const set=(id,v)=>{const e=document.getElementById('tv26'+id);if(e)e.textContent=v;};
- const status=(s,bad=false)=>{const e=document.getElementById('tv26status');if(e){e.textContent=s;e.style.color=bad?'#9b422d':'';}};
- const places={"Quetta, Pakistan":[30.1798,66.975],"Lahore, Pakistan":[31.5204,74.3587],"Karachi, Pakistan":[24.8607,67.0011],"Islamabad, Pakistan":[33.6844,73.0479],"Fresno, California, USA":[36.7378,-119.7871],"Phoenix, Arizona, USA":[33.4484,-112.074],"Ludhiana, India":[30.901,75.8573],"Harbin, China":[45.8038,126.535],"Toowoomba, Australia":[-27.5598,151.9507],"Nakuru, Kenya":[-0.3031,36.08]};
- function coords(){
-  const sel=document.getElementById('place');
-  if(!sel)return null;
-  const raw=sel.value||'';
-  if(raw.includes(',')){const a=raw.split(',').map(Number);if(a.length===2&&a.every(Number.isFinite))return a;}
-  const name=sel.selectedOptions?.[0]?.text||raw;
-  return places[name]||places[raw]||null;
- }
- async function load(){
-  const c=coords();
-  if(!c){status('Could not identify the selected location for the 2026 data panel.',true);return;}
-  status('Requesting 2026 year-to-date observations from NASA POWER…');
-  ids.forEach(k=>set(k,'…'));
-  const months=Array.from({length:12},(_,i)=>({name:new Date(2026,i,1).toLocaleString('en',{month:'short'}),sum:0,count:0}));
-  try{
-   const u=new URL('https://power.larc.nasa.gov/api/temporal/daily/point');
-   u.search=new URLSearchParams({parameters:'T2M,T2M_MAX,PRECTOTCORR,ALLSKY_SFC_SW_DWN',community:'AG',longitude:String(c[1]),latitude:String(c[0]),start:'20260101',end:new Date().toISOString().slice(0,10).replaceAll('-',''),format:'JSON','time-standard':'LST'});
-   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),45000);
-   let res;try{res=await fetch(u,{mode:'cors',cache:'no-store',signal:controller.signal});}finally{clearTimeout(timer);}
-   if(!res.ok)throw new Error('NASA POWER returned HTTP '+res.status);
-   const json=await res.json(),p=json?.properties?.parameter||json?.parameter;
-   if(!p?.T2M||!p?.T2M_MAX||!p?.PRECTOTCORR||!p?.ALLSKY_SFC_SW_DWN)throw new Error('NASA response is missing one or more requested parameters.');
-   const valid=v=>Number.isFinite(Number(v))&&Number(v)>-900;
-   const keys=Object.keys(p.T2M).sort();
-   const avg=(a)=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null;
-   const t=keys.map(k=>p.T2M[k]).filter(valid).map(Number);
-   const mx=keys.map(k=>p.T2M_MAX[k]).filter(valid).map(Number);
-   const r=keys.map(k=>p.PRECTOTCORR[k]).filter(valid).map(Number);
-   const s=keys.map(k=>p.ALLSKY_SFC_SW_DWN[k]).filter(valid).map(Number);
-   if(!t.length||!mx.length||!r.length)throw new Error('No usable daily values were returned.');
-   keys.forEach(k=>{const m=Number(k.slice(4,6))-1,v=p.PRECTOTCORR[k];if(m>=0&&m<12&&valid(v)){months[m].sum+=Number(v);months[m].count++;}});
-   set('temp',avg(t).toFixed(1)+' °C');
-   set('hot',String(keys.filter(k=>valid(p.T2M_MAX[k])&&Number(p.T2M_MAX[k])>=35).length));
-   set('rain',r.reduce((a,b)=>a+b,0).toFixed(1)+' mm');
-   set('solar',s.length?avg(s).toFixed(2):'N/A');
-   set('coverage',String(t.length));
-   const box=document.getElementById('tv26months');
-   if(box)box.innerHTML=months.map(m=>'<div class="tv26month"><strong>'+m.name+'</strong><span>'+m.sum.toFixed(1)+' mm</span></div>').join('');
-   status('NASA POWER 2026 data loaded for the selected location. Valid T2M daily records: '+t.length+'. Valid parameter counts — T2M_MAX: '+mx.length+', precipitation: '+r.length+', solar: '+s.length+'.');
-  }catch(e){
-   ids.forEach(k=>set(k,'N/A'));
-   const box=document.getElementById('tv26months');if(box)box.textContent='Monthly totals unavailable because NASA POWER data could not be loaded. No sample values are substituted.';
-   status((e.name==='AbortError'?'NASA POWER request timed out after 45 seconds.':e.message||'Network error')+' Check your connection and refresh later.',true);
-  }
- }
- document.getElementById('tv26refresh')?.addEventListener('click',load);
- document.getElementById('place')?.addEventListener('change',load);
- load();
-})();
 </script></body></html>
