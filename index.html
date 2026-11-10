@@ -26,7 +26,24 @@
 <div class="card wide chart-card"><h3>Monthly precipitation</h3><p class="sub">Sum of daily corrected precipitation · millimetres</p><svg id="rainChart" class="chart" viewBox="0 0 640 220" role="img" aria-label="Monthly precipitation chart"></svg></div>
 <div class="card chart-card"><h3>Monthly temperature</h3><p class="sub">Mean daily air temperature · °C</p><svg id="tempChart" class="chart" viewBox="0 0 420 220" role="img" aria-label="Monthly temperature chart"></svg></div>
 </section>
-<div class="card" style="margin:22px 0"><h3>Explore historical climate and drought</h3><p class="sub">Open the dedicated explorer to compare 2019–2024, select a year, and investigate rainfall anomalies for your chosen region.</p><a class="btn" href="history.html" style="display:inline-block;text-decoration:none">Open climate history</a></div><div class="notice"><strong>How to read this evidence</strong>These are historical gridded environmental estimates from NASA POWER, not measurements taken on your individual field. They can help describe regional conditions, but cannot by themselves determine soil health, irrigation needs, or the best crop rotation.</div>
+<div class="card" style="margin:22px 0"><h3>Explore historical climate and drought</h3><p class="sub">Open the dedicated explorer to compare 2019–2024, select a year, and investigate rainfall anomalies for your chosen region.</p><a class="btn" href="history.html" style="display:inline-block;text-decoration:none">Open climate history</a></div>
+<section class="card" id="regionCompare" style="margin:24px 0">
+ <div class="section-head"><div><span class="tag">SIGNATURE FEATURE · NASA POWER</span><h2 style="margin-top:9px">Which regions are changing?</h2><p>Select agricultural regions and compare annual temperature and rainfall patterns from 2020–2025.</p></div></div>
+ <div class="controls" id="compareChoices" style="margin:14px 0">
+  <label><input type="checkbox" value="Quetta, Pakistan|30.1798|66.9750" checked> Quetta</label>
+  <label><input type="checkbox" value="Lahore, Pakistan|31.5204|74.3587" checked> Lahore</label>
+  <label><input type="checkbox" value="Karachi, Pakistan|24.8607|67.0011" checked> Karachi</label>
+  <label><input type="checkbox" value="Islamabad, Pakistan|33.6844|73.0479"> Islamabad</label>
+  <button class="btn" id="runCompare" type="button">Compare selected regions</button>
+ </div>
+ <p id="compareStatus" class="status" role="status">Choose 2–4 regions and run the comparison.</p>
+ <div class="history-grid">
+  <div class="card"><h3>Annual mean air temperature</h3><p class="sub">NASA POWER T2M · °C</p><div id="compareTemp" class="note">No comparison loaded yet.</div></div>
+  <div class="card"><h3>Annual precipitation total</h3><p class="sub">NASA POWER PRECTOTCORR · mm</p><div id="compareRain" class="note">No comparison loaded yet.</div></div>
+ </div>
+ <div class="notice"><strong>How to interpret the comparison</strong>Compare the direction and size of changes within each region. Temperature is the mean of valid daily T2M values; precipitation is the sum of valid daily PRECTOTCORR values. These are gridded regional estimates, not farm measurements. Differences between regions do not by themselves prove climate change attribution or crop impacts.</div>
+</section>
+<div class="notice"><strong>How to read this evidence</strong>These are historical gridded environmental estimates from NASA POWER, not measurements taken on your individual field. They can help describe regional conditions, but cannot by themselves determine soil health, irrigation needs, or the best crop rotation.</div>
 <div class="section-head"><div><h2>Bring in the farm context</h2><p>Local details matter as much as regional climate indicators.</p></div></div>
 <section class="lower">
 <div class="card"><h3>Farm profile</h3><p class="sub">Add information that a farmer or local expert can verify.</p>
