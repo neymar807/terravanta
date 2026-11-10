@@ -7,6 +7,25 @@
 <section class="hero"><div class="eyebrow">Pakistan · Guided regional case study</div><h1>Two regions. Different climate patterns. One evidence-based comparison.</h1><p>This example compares Quetta and Lahore using NASA POWER daily air-temperature and corrected-precipitation estimates. It demonstrates how to investigate regional differences without claiming to measure an individual farm.</p></section>
 <main class="wrap">
 <section class="card"><span class="tag">CASE STUDY QUESTION</span><h2>How have temperature and precipitation patterns differed from 2020 to 2025?</h2><p class="sub">The comparison uses the same parameters, years and calculation method for both locations.</p><button class="btn" id="reload">Load NASA observations</button><p id="status" class="status" role="status">Waiting to request NASA POWER observations…</p><div class="tablewrap"><table><thead><tr><th>Region</th><th>Year</th><th>Mean air temperature</th><th>Annual precipitation</th><th>Valid days (temp/rain)</th></tr></thead><tbody id="rows"><tr><td colspan="5">No data loaded yet.</td></tr></tbody></table></div></section>
+
+<section class="card" id="regional-comparison">
+ <span class="tag">SIGNATURE FEATURE · REGIONAL COMPARISON</span>
+ <h2>Compare agricultural regions across Pakistan</h2>
+ <p class="sub">Select 2–4 regions to compare annual mean air temperature and annual precipitation from 2020–2025 using the same NASA POWER indicators.</p>
+ <div id="compareChoices" style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin:14px 0">
+  <label><input type="checkbox" value="Quetta, Pakistan|30.1798|66.9750" checked> Quetta</label>
+  <label><input type="checkbox" value="Lahore, Pakistan|31.5204|74.3587" checked> Lahore</label>
+  <label><input type="checkbox" value="Karachi, Pakistan|24.8607|67.0011" checked> Karachi</label>
+  <label><input type="checkbox" value="Islamabad, Pakistan|33.6844|73.0479"> Islamabad</label>
+  <button class="btn" id="runCompare" type="button">Compare selected regions</button>
+ </div>
+ <p id="compareStatus" class="status" role="status">Choose 2–4 regions and run the comparison.</p>
+ <h3>Annual mean air temperature</h3><p class="sub">NASA POWER T2M · °C</p>
+ <div id="compareTemp" class="tablewrap"><p class="note">No comparison loaded yet.</p></div>
+ <h3>Annual precipitation total</h3><p class="sub">NASA POWER PRECTOTCORR · mm</p>
+ <div id="compareRain" class="tablewrap"><p class="note">No comparison loaded yet.</p></div>
+ <div class="notice"><strong>How to interpret this comparison</strong>Compare the direction and size of changes within each region. Temperature is the mean of valid daily T2M values; precipitation is the sum of valid daily PRECTOTCORR values. These are gridded regional estimates, not farm measurements. Differences between regions do not by themselves prove climate-change attribution or crop impacts.</div>
+</section>
 <section class="card"><h2>How to investigate the results</h2><ol><li>Compare each region with its own earlier years to identify direction and consistency of change.</li><li>Compare rainfall totals and note that annual totals can hide seasonal timing and dry spells.</li><li>Check whether a year has fewer valid daily records before interpreting its values.</li><li>Use the satellite vegetation page to explore broad vegetation patterns, while considering seasonality and cloud/quality limitations.</li></ol></section>
 <section class="card"><h2>What this case study can and cannot conclude</h2><p><strong>It can show:</strong> regional gridded estimates of mean daily air temperature and summed daily corrected precipitation for the selected grid locations and years.</p><p><strong>It cannot prove:</strong> the cause of a trend, crop yield changes, farm-level drought, soil moisture, irrigation demand, or which crop a farmer should plant. Those questions need additional observations, crop calendars, soil information and local expertise.</p></section>
 <div class="notice"><strong>Data and method</strong>Source: NASA POWER Daily API, parameters T2M (°C) and PRECTOTCORR (mm/day), community AG, 1 January 2020–31 December 2025, time standard UTC. Annual temperature is the mean of valid daily values; annual precipitation is the sum of valid daily values. Fill values at or below −900 are excluded. POWER data are gridded estimates, not field measurements.</div>
@@ -34,5 +53,37 @@ async function load(){
  }catch(e){rows.innerHTML='<tr><td colspan="5">Data unavailable. No sample values are displayed.</td></tr>';status.textContent='Could not load the case study: '+(e.message||'network error')+'. Try again later.';}
  finally{document.getElementById('reload').disabled=false;}
 }
+
+async function runRegionComparison(){
+ const chosen=[...document.querySelectorAll('#compareChoices input:checked')],status=document.getElementById('compareStatus');
+ if(chosen.length<2||chosen.length>4){status.textContent='Select between two and four regions.';return;}
+ const button=document.getElementById('runCompare');button.disabled=true;
+ status.textContent='Requesting NASA POWER daily observations for the selected regions…';
+ document.getElementById('compareTemp').textContent='Loading…';document.getElementById('compareRain').textContent='Loading…';
+ try{
+  const results=await Promise.all(chosen.map(async box=>{
+   const [name,lat,lon]=box.value.split('|'),u=new URL('https://power.larc.nasa.gov/api/temporal/daily/point');
+   u.search=new URLSearchParams({parameters:'T2M,PRECTOTCORR',community:'AG',longitude:lon,latitude:lat,start:'20200101',end:'20251231',format:'JSON','time-standard':'UTC'});
+   const res=await fetch(u,{cache:'no-store'});if(!res.ok)throw new Error(name+': NASA POWER HTTP '+res.status);
+   const p=(await res.json())?.properties?.parameter;if(!p?.T2M||!p?.PRECTOTCORR)throw new Error(name+': expected parameters missing');
+   const valid=v=>Number.isFinite(Number(v))&&Number(v)>-900,years=[];
+   for(let y=2020;y<=2025;y++){
+    const keys=Object.keys(p.T2M).filter(k=>k.startsWith(String(y))),t=keys.map(k=>p.T2M[k]).filter(valid),rain=keys.map(k=>p.PRECTOTCORR[k]).filter(valid);
+    years.push({year:y,temp:t.length?t.reduce((a,b)=>a+Number(b),0)/t.length:null,rain:rain.length?rain.reduce((a,b)=>a+Number(b),0):null});
+   }
+   return {name,years};
+  }));
+  const render=(key,unit)=>'<table><thead><tr><th>Region</th>'+results[0].years.map(y=>'<th>'+y.year+'</th>').join('')+'</tr></thead><tbody>'+results.map(r=>'<tr><td><strong>'+r.name+'</strong></td>'+r.years.map(y=>'<td>'+(y[key]===null?'N/A':y[key].toFixed(1)+' '+unit)+'</td>').join('')+'</tr>').join('')+'</tbody></table>';
+  document.getElementById('compareTemp').innerHTML=render('temp','°C');
+  document.getElementById('compareRain').innerHTML=render('rain','mm');
+  status.textContent='NASA POWER comparison loaded. Missing values are shown as N/A; check data coverage before interpreting differences.';
+ }catch(e){
+  status.textContent='Comparison unavailable: '+(e.message||'network error')+'. No sample values substituted.';
+  document.getElementById('compareTemp').textContent='Data unavailable.';
+  document.getElementById('compareRain').textContent='Data unavailable.';
+ }finally{button.disabled=false;}
+}
+document.getElementById('runCompare').addEventListener('click',runRegionComparison);
+
 document.getElementById('reload').addEventListener('click',load);load();
 </script></body></html>
