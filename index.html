@@ -128,6 +128,28 @@ $('brief').addEventListener('click',()=>{
  $('summary').innerHTML=`<p><strong>Region:</strong> ${climate.locationName}</p><p><strong>2025 mean temperature:</strong> ${climate.annualTemp.toFixed(1)} °C</p><p><strong>2025 precipitation total:</strong> ${climate.annualRain.toFixed(0)} mm</p><p><strong>Mean daily solar energy:</strong> ${climate.annualSolar.toFixed(1)} MJ/m²/day</p><hr style="border:0;border-top:1px solid #e1e7de"><p><strong>Farm details supplied</strong></p><p>Soil: ${soil}<br>Water: ${water}<br>Usual crop: ${crop}<br>Priority: ${priority}</p><p><strong>Useful next checks</strong></p><ul class="checklist"><li>Confirm field-level soil texture, salinity, and organic matter with a local soil test.</li><li>Compare this regional climate record with farm records and local seasonal knowledge.</li><li>Ask a local agronomist to review crop options against water access, planting dates, and soil constraints.</li></ul><p class="metric-note">This is an evidence summary, not a crop or irrigation recommendation. The displayed 2019–2024 records describe past regional conditions and are not a forecast. The rainfall screen is not a formal drought index.</p>`;
 });
 loadData();renderMap();
+
+async function runRegionComparison(){
+ const chosen=[...document.querySelectorAll('#compareChoices input:checked')],status=$('compareStatus');
+ if(chosen.length<2||chosen.length>4){status.textContent='Select between two and four regions.';return;}
+ $('runCompare').disabled=true;status.textContent='Requesting NASA POWER daily observations for the selected regions…';$('compareTemp').textContent='Loading…';$('compareRain').textContent='Loading…';
+ try{
+  const results=await Promise.all(chosen.map(async box=>{
+   const [name,lat,lon]=box.value.split('|'),u=new URL('https://power.larc.nasa.gov/api/temporal/daily/point');
+   u.search=new URLSearchParams({parameters:'T2M,PRECTOTCORR',community:'AG',longitude:lon,latitude:lat,start:'20200101',end:'20251231',format:'JSON','time-standard':'UTC'});
+   const res=await fetch(u,{cache:'no-store'});if(!res.ok)throw new Error(name+': NASA POWER HTTP '+res.status);
+   const p=(await res.json())?.properties?.parameter;if(!p?.T2M||!p?.PRECTOTCORR)throw new Error(name+': expected parameters missing');
+   const valid=v=>Number.isFinite(Number(v))&&Number(v)>-900,years=[];
+   for(let y=2020;y<=2025;y++){const keys=Object.keys(p.T2M).filter(k=>k.startsWith(String(y))),t=keys.map(k=>p.T2M[k]).filter(valid),r=keys.map(k=>p.PRECTOTCORR[k]).filter(valid);years.push({year:y,temp:t.length?t.reduce((a,b)=>a+Number(b),0)/t.length:null,rain:r.length?r.reduce((a,b)=>a+Number(b),0):null});}
+   return {name,years};
+  }));
+  const render=(key,unit)=>'<div style="overflow-x:auto"><table class="drought-table"><thead><tr><th>Region</th>'+results[0].years.map(x=>'<th>'+x.year+'</th>').join('')+'</tr></thead><tbody>'+results.map(r=>'<tr><td><strong>'+r.name+'</strong></td>'+r.years.map(y=>'<td>'+(y[key]===null?'N/A':y[key].toFixed(1)+' '+unit)+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
+  $('compareTemp').innerHTML=render('temp','°C');$('compareRain').innerHTML=render('rain','mm');
+  status.textContent='NASA POWER comparison loaded. Missing values are shown as N/A; check valid data coverage before interpreting differences.';
+ }catch(e){status.textContent='Comparison unavailable: '+(e.message||'network error')+'. No sample values substituted.';$('compareTemp').textContent='Data unavailable.';$('compareRain').textContent='Data unavailable.';}
+ finally{$('runCompare').disabled=false;}
+}
+$('runCompare').addEventListener('click',runRegionComparison);
 </script>
 
 </body></html>
