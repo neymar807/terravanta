@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#10271f"><meta name="description" content="A transparent Pakistan agricultural-region case study using NASA POWER climate observations."><title>Pakistan Case Study | TerraVanta</title>
+<style>
+:root{--bg:#f4f5ef;--ink:#17271f;--muted:#68756d;--green:#1e5a42;--lime:#c8df8b;--line:#dce2d8;--card:#fff}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 Inter,system-ui,sans-serif}.top{background:#10271f;color:#fff;padding:16px max(22px,calc((100% - 1080px)/2));display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}.brand{color:#fff;text-decoration:none;font-weight:800;letter-spacing:.05em}.nav{display:flex;gap:16px;flex-wrap:wrap}.nav a{color:#d9e6dc;text-decoration:none;font-size:13px}.hero{background:linear-gradient(115deg,#10271f,#1b4937);color:white;padding:48px max(22px,calc((100% - 1080px)/2))}.eyebrow{color:var(--lime);font-size:12px;font-weight:800;letter-spacing:.15em;text-transform:uppercase}.hero h1{font-size:clamp(32px,5vw,54px);line-height:1.08;margin:12px 0}.hero p{max-width:740px;color:#d0ddd4}.wrap{max-width:1080px;margin:auto;padding:30px 22px 65px}.card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:20px;margin:15px 0;box-shadow:0 4px 18px #173b2b08}.tag{display:inline-block;background:#eef3e9;color:#31543d;padding:4px 9px;border-radius:99px;font-size:11px;font-weight:800;letter-spacing:.06em}.sub,.note{font-size:13px;color:var(--muted)}.status{font-size:13px;color:var(--muted);min-height:22px}.tablewrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);white-space:nowrap}th{color:var(--muted);font-size:11px;text-transform:uppercase}.notice{background:#edf3e7;border:1px solid #d8e5ca;border-radius:13px;padding:16px 18px;margin:18px 0;color:#344d3c}.notice strong{display:block;margin-bottom:4px}.btn{background:var(--green);color:white;border:0;padding:11px 16px;border-radius:10px;font-weight:700;cursor:pointer}.foot{border-top:1px solid var(--line);padding:22px;text-align:center;color:var(--muted);font-size:12px}.foot a{color:var(--green)}
+</style></head><body>
+<header class="top"><a class="brand" href="index.html">TERRAVANTA</a><nav class="nav"><a href="index.html">Home & comparison</a><a href="history.html">Climate history</a><a href="monitoring.html">Satellite monitoring</a><a href="climate-risk.html">Climate risk</a></nav></header>
+<section class="hero"><div class="eyebrow">Pakistan · Guided regional case study</div><h1>Two regions. Different climate patterns. One evidence-based comparison.</h1><p>This example compares Quetta and Lahore using NASA POWER daily air-temperature and corrected-precipitation estimates. It demonstrates how to investigate regional differences without claiming to measure an individual farm.</p></section>
+<main class="wrap">
+<section class="card"><span class="tag">CASE STUDY QUESTION</span><h2>How have temperature and precipitation patterns differed from 2020 to 2025?</h2><p class="sub">The comparison uses the same parameters, years and calculation method for both locations.</p><button class="btn" id="reload">Load NASA observations</button><p id="status" class="status" role="status">Waiting to request NASA POWER observations…</p><div class="tablewrap"><table><thead><tr><th>Region</th><th>Year</th><th>Mean air temperature</th><th>Annual precipitation</th><th>Valid days (temp/rain)</th></tr></thead><tbody id="rows"><tr><td colspan="5">No data loaded yet.</td></tr></tbody></table></div></section>
+<section class="card"><h2>How to investigate the results</h2><ol><li>Compare each region with its own earlier years to identify direction and consistency of change.</li><li>Compare rainfall totals and note that annual totals can hide seasonal timing and dry spells.</li><li>Check whether a year has fewer valid daily records before interpreting its values.</li><li>Use the satellite vegetation page to explore broad vegetation patterns, while considering seasonality and cloud/quality limitations.</li></ol></section>
+<section class="card"><h2>What this case study can and cannot conclude</h2><p><strong>It can show:</strong> regional gridded estimates of mean daily air temperature and summed daily corrected precipitation for the selected grid locations and years.</p><p><strong>It cannot prove:</strong> the cause of a trend, crop yield changes, farm-level drought, soil moisture, irrigation demand, or which crop a farmer should plant. Those questions need additional observations, crop calendars, soil information and local expertise.</p></section>
+<div class="notice"><strong>Data and method</strong>Source: NASA POWER Daily API, parameters T2M (°C) and PRECTOTCORR (mm/day), community AG, 1 January 2020–31 December 2025, time standard UTC. Annual temperature is the mean of valid daily values; annual precipitation is the sum of valid daily values. Fill values at or below −900 are excluded. POWER data are gridded estimates, not field measurements.</div>
+</main><footer class="foot">Independent student project; not affiliated with or endorsed by NASA. <a href="https://power.larc.nasa.gov/docs/services/api/temporal/daily/">NASA POWER Daily API documentation</a>.</footer>
+<script>
+const places=[{name:'Quetta, Pakistan',lat:30.1798,lon:66.9750},{name:'Lahore, Pakistan',lat:31.5204,lon:74.3587}];
+const status=document.getElementById('status'),rows=document.getElementById('rows');
+async function load(){
+ document.getElementById('reload').disabled=true;status.textContent='Requesting NASA POWER observations for Quetta and Lahore…';rows.innerHTML='<tr><td colspan="5">Loading…</td></tr>';
+ try{
+  const results=await Promise.all(places.map(async place=>{
+   const u=new URL('https://power.larc.nasa.gov/api/temporal/daily/point');u.search=new URLSearchParams({parameters:'T2M,PRECTOTCORR',community:'AG',longitude:String(place.lon),latitude:String(place.lat),start:'20200101',end:'20251231',format:'JSON','time-standard':'UTC'});
+   const res=await fetch(u,{cache:'no-store'});if(!res.ok)throw new Error('NASA POWER HTTP '+res.status+' for '+place.name);
+   const p=(await res.json())?.properties?.parameter;if(!p?.T2M||!p?.PRECTOTCORR)throw new Error('Required data unavailable for '+place.name);
+   const valid=v=>Number.isFinite(Number(v))&&Number(v)>-900;
+   const annual=[];
+   for(let year=2020;year<=2025;year++){
+    const keys=Object.keys(p.T2M).filter(k=>k.startsWith(String(year))),t=keys.map(k=>p.T2M[k]).filter(valid),r=keys.map(k=>p.PRECTOTCORR[k]).filter(valid);
+    annual.push({year,temp:t.length?t.reduce((a,b)=>a+Number(b),0)/t.length:null,rain:r.length?r.reduce((a,b)=>a+Number(b),0):null,tn:t.length,rn:r.length});
+   }
+   return {place,annual};
+  }));
+  rows.innerHTML=results.map(result=>result.annual.map(y=>'<tr><td>'+result.place.name+'</td><td>'+y.year+'</td><td>'+(y.temp===null?'N/A':y.temp.toFixed(2)+' °C')+'</td><td>'+(y.rain===null?'N/A':y.rain.toFixed(1)+' mm')+'</td><td>'+y.tn+' / '+y.rn+'</td></tr>').join('')).join('');
+  status.textContent='NASA POWER data loaded. Check valid-day counts before comparing years.';
+ }catch(e){rows.innerHTML='<tr><td colspan="5">Data unavailable. No sample values are displayed.</td></tr>';status.textContent='Could not load the case study: '+(e.message||'network error')+'. Try again later.';}
+ finally{document.getElementById('reload').disabled=false;}
+}
+document.getElementById('reload').addEventListener('click',load);load();
+</script></body></html>
