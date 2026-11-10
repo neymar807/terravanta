@@ -16,7 +16,7 @@
 <header class="top"><div class="brand"><span class="mark">T</span><span>TERRAVANTA</span></div><nav><a href="index.html">Home & map</a><a href="history.html">Climate history</a><a href="monitoring.html">Field monitoring</a><a class="active" href="climate-risk.html">Climate risk scorecard</a></nav><small>NASA Space Apps Challenge 2026 · Field Shift</small></header>
 <section class="hero"><div class="eyebrow">NASA POWER · Observed climate data</div><h1>Explore real climate observations for agricultural regions.</h1><p>Explore NASA POWER daily temperature and precipitation observations for selected locations.</p></section>
 <main class="wrap">
-<div class="head"><div><span class="tag">NASA POWER · 2025 OBSERVATIONS</span><h2 style="margin-top:8px">NASA climate observations</h2><p>Choose a location to request NASA POWER observations for 2025.</p></div><select id="place" class="select" aria-label="Choose demonstration location"><option>Quetta, Pakistan</option><option>Lahore, Pakistan</option><option>Karachi, Pakistan</option><option>Islamabad, Pakistan</option><option>Fresno, California, USA</option><option>Phoenix, Arizona, USA</option><option>Ludhiana, India</option><option>Harbin, China</option><option>Toowoomba, Australia</option><option>Nakuru, Kenya</option></select></div>
+<div class="head"><div><span class="tag">NASA POWER · 2025 OBSERVATIONS</span><h2 style="margin-top:8px">NASA climate observations</h2><p>Choose a location to request NASA POWER observations for 2025.</p></div><select id="place" class="select" aria-label="Choose demonstration location"><option>Quetta, Pakistan</option><option>Lahore, Pakistan</option><option>Karachi, Pakistan</option><option>Islamabad, Pakistan</option><option>Fresno, California, USA</option><option>Phoenix, Arizona, USA</option><option>Ludhiana, India</option><option>Harbin, China</option><option>Toowoomba, Australia</option><option>Nakuru, Kenya</option><option>Faisalabad, Pakistan</option><option>Multan, Pakistan</option><option>Peshawar, Pakistan</option><option>Lincoln, Nebraska, USA</option><option>Fargo, North Dakota, USA</option><option>Bakersfield, California, USA</option><option>Salinas, California, USA</option><option>Yakima, Washington, USA</option><option>Amarillo, Texas, USA</option><option>Indore, India</option><option>Nagpur, India</option><option>Jaipur, India</option><option>Shijiazhuang, China</option><option>Chengdu, China</option><option>Cuiabá, Brazil</option><option>Goiânia, Brazil</option><option>Mildura, Australia</option><option>Griffith, Australia</option><option>Winnipeg, Canada</option><option>Regina, Canada</option><option>Bloemfontein, South Africa</option><option>Johannesburg, South Africa</option><option>Lviv, Ukraine</option><option>Dnipro, Ukraine</option></select></div>
 <p id="status" role="status" aria-live="polite" style="margin:12px 0;color:#526158;font-size:13px">Connecting to NASA POWER…</p>
 <div class="notice"><strong>Data interpretation</strong>These are NASA POWER gridded/reanalysis climate observations for the selected coordinates, not measurements taken on a particular farm. The 35°C hot-day count is a simple descriptive threshold and is not a crop-specific heat-stress diagnosis. Precipitation does not measure irrigation access, groundwater, soil moisture, or drought impacts.</div>
 <section class="grid" aria-live="polite">
@@ -58,7 +58,16 @@ const locations={
 'Ludhiana, India':[30.9010,75.8573],
 'Harbin, China':[45.8038,126.5350],
 'Toowoomba, Australia':[-27.5598,151.9507],
-'Nakuru, Kenya':[-0.3031,36.0800]
+'Nakuru, Kenya':[-0.3031,36.0800],
+'Faisalabad, Pakistan':[31.4180,73.0790],'Multan, Pakistan':[30.1575,71.5249],'Peshawar, Pakistan':[34.0151,71.5249],
+'Lincoln, Nebraska, USA':[40.8136,-96.7026],'Fargo, North Dakota, USA':[46.8772,-96.7898],'Bakersfield, California, USA':[35.3733,-119.0187],'Salinas, California, USA':[36.6777,-121.6555],'Yakima, Washington, USA':[46.6021,-120.5059],'Amarillo, Texas, USA':[35.2220,-101.8313],
+'Indore, India':[22.7196,75.8577],'Nagpur, India':[21.1458,79.0882],'Jaipur, India':[26.9124,75.7873],
+'Shijiazhuang, China':[38.0428,114.5149],'Chengdu, China':[30.5728,104.0668],
+'Cuiabá, Brazil':[-15.6014,-56.0979],'Goiânia, Brazil':[-16.6869,-49.2648],
+'Mildura, Australia':[-34.1855,142.1625],'Griffith, Australia':[-34.2810,146.0360],
+'Winnipeg, Canada':[49.8951,-97.1384],'Regina, Canada':[50.4452,-104.6189],
+'Bloemfontein, South Africa':[-29.0852,26.1596],'Johannesburg, South Africa':[-26.2041,28.0473],
+'Lviv, Ukraine':[49.8397,24.0297],'Dnipro, Ukraine':[48.4647,35.0462]
 };
 const $=id=>document.getElementById(id);
 const valid=v=>v!==null&&v!==undefined&&Number.isFinite(Number(v))&&Number(v)>-900;
