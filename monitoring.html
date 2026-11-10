@@ -45,19 +45,7 @@
 <div class="notice"><strong>How to interpret this dashboard</strong>Hot-day screening uses a simple 35°C daily maximum threshold; low-rain screening uses less than 5 mm total over seven days; high-gust screening uses 40 km/h. These are illustrative watch thresholds for this prototype, not validated local agricultural risk thresholds. Local advisories, crop stage, soil, irrigation access and farm records matter.</div>
 <div class="notice"><strong>Data sources & limitations</strong>Satellite image: NASA GIBS / MODIS Terra. Forecast and soil moisture estimates: Open-Meteo. Forecasts change as models update and are not observations. Satellite true-colour imagery is not NDVI. Regional grid estimates do not replace field sensors or local agricultural advice.</div>
 
-<section class="card tv2026" aria-live="polite">
- <div class="tv26head"><div><span class="tv26tag">NASA POWER · 2026 YEAR TO DATE</span><h2>2026 climate observations</h2><p>Daily observations from 1 January 2026 through the latest requested date, subject to NASA POWER data availability.</p></div><button class="tv26btn" id="tv26refresh" type="button">Refresh 2026 data</button></div>
- <p id="tv26status" class="tv26status" role="status">Requesting 2026 observations from NASA POWER…</p>
- <div class="tv26grid">
-  <div><small>Mean air temperature</small><strong id="tv26temp">—</strong><span>°C · T2M daily mean</span></div>
-  <div><small>Hot days</small><strong id="tv26hot">—</strong><span>Days with T2M_MAX ≥ 35°C</span></div>
-  <div><small>Total precipitation</small><strong id="tv26rain">—</strong><span>mm · sum of daily values</span></div>
-  <div><small>Mean solar energy</small><strong id="tv26solar">—</strong><span>MJ/m²/day · daily mean</span></div>
-  <div><small>Valid daily records</small><strong id="tv26coverage">—</strong><span>Available dates returned by NASA</span></div>
- </div>
- <h3>2026 monthly precipitation to date</h3><div id="tv26months" class="tv26months">Waiting for NASA POWER…</div>
- <p class="tv26note">Source: NASA POWER Daily API (T2M, T2M_MAX, PRECTOTCORR, ALLSKY_SFC_SW_DWN). These are gridded regional estimates, not measurements from an individual farm. The final month may be incomplete; the displayed record count shows available dates. A 35°C count is descriptive, not a crop-specific stress diagnosis. No sample values are substituted if the request fails.</p>
-</section></main>
+</main>
 <footer class="foot">Independent student project; not affiliated with or endorsed by NASA. Sources: <a href="https://nasa-gibs.github.io/gibs-api-docs/" target="_blank" rel="noreferrer">NASA GIBS documentation</a> · <a href="https://open-meteo.com/en/docs" target="_blank" rel="noreferrer">Open-Meteo API documentation</a>.</footer>
 <script>
 const $=id=>document.getElementById(id);
@@ -74,59 +62,4 @@ function load(){
 $('refresh').addEventListener('click',load);$('place').addEventListener('change',load);load();
 </script>
 
-<script>
-(()=>{
- const ids=['temp','hot','rain','solar','coverage'];
- const set=(id,v)=>{const e=document.getElementById('tv26'+id);if(e)e.textContent=v;};
- const status=(s,bad=false)=>{const e=document.getElementById('tv26status');if(e){e.textContent=s;e.style.color=bad?'#9b422d':'';}};
- const places={"Quetta, Pakistan":[30.1798,66.975],"Lahore, Pakistan":[31.5204,74.3587],"Karachi, Pakistan":[24.8607,67.0011],"Islamabad, Pakistan":[33.6844,73.0479],"Fresno, California, USA":[36.7378,-119.7871],"Phoenix, Arizona, USA":[33.4484,-112.074],"Ludhiana, India":[30.901,75.8573],"Harbin, China":[45.8038,126.535],"Toowoomba, Australia":[-27.5598,151.9507],"Nakuru, Kenya":[-0.3031,36.08]};
- function coords(){
-  const sel=document.getElementById('place');
-  if(!sel)return null;
-  const raw=sel.value||'';
-  if(raw.includes(',')){const a=raw.split(',').map(Number);if(a.length===2&&a.every(Number.isFinite))return a;}
-  const name=sel.selectedOptions?.[0]?.text||raw;
-  return places[name]||places[raw]||null;
- }
- async function load(){
-  const c=coords();
-  if(!c){status('Could not identify the selected location for the 2026 data panel.',true);return;}
-  status('Requesting 2026 year-to-date observations from NASA POWER…');
-  ids.forEach(k=>set(k,'…'));
-  const months=Array.from({length:12},(_,i)=>({name:new Date(2026,i,1).toLocaleString('en',{month:'short'}),sum:0,count:0}));
-  try{
-   const u=new URL('https://power.larc.nasa.gov/api/temporal/daily/point');
-   u.search=new URLSearchParams({parameters:'T2M,T2M_MAX,PRECTOTCORR,ALLSKY_SFC_SW_DWN',community:'AG',longitude:String(c[1]),latitude:String(c[0]),start:'20260101',end:new Date().toISOString().slice(0,10).replaceAll('-',''),format:'JSON','time-standard':'LST'});
-   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),45000);
-   let res;try{res=await fetch(u,{mode:'cors',cache:'no-store',signal:controller.signal});}finally{clearTimeout(timer);}
-   if(!res.ok)throw new Error('NASA POWER returned HTTP '+res.status);
-   const json=await res.json(),p=json?.properties?.parameter||json?.parameter;
-   if(!p?.T2M||!p?.T2M_MAX||!p?.PRECTOTCORR||!p?.ALLSKY_SFC_SW_DWN)throw new Error('NASA response is missing one or more requested parameters.');
-   const valid=v=>Number.isFinite(Number(v))&&Number(v)>-900;
-   const keys=Object.keys(p.T2M).sort();
-   const avg=(a)=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null;
-   const t=keys.map(k=>p.T2M[k]).filter(valid).map(Number);
-   const mx=keys.map(k=>p.T2M_MAX[k]).filter(valid).map(Number);
-   const r=keys.map(k=>p.PRECTOTCORR[k]).filter(valid).map(Number);
-   const s=keys.map(k=>p.ALLSKY_SFC_SW_DWN[k]).filter(valid).map(Number);
-   if(!t.length||!mx.length||!r.length)throw new Error('No usable daily values were returned.');
-   keys.forEach(k=>{const m=Number(k.slice(4,6))-1,v=p.PRECTOTCORR[k];if(m>=0&&m<12&&valid(v)){months[m].sum+=Number(v);months[m].count++;}});
-   set('temp',avg(t).toFixed(1)+' °C');
-   set('hot',String(keys.filter(k=>valid(p.T2M_MAX[k])&&Number(p.T2M_MAX[k])>=35).length));
-   set('rain',r.reduce((a,b)=>a+b,0).toFixed(1)+' mm');
-   set('solar',s.length?avg(s).toFixed(2):'N/A');
-   set('coverage',String(t.length));
-   const box=document.getElementById('tv26months');
-   if(box)box.innerHTML=months.map(m=>'<div class="tv26month"><strong>'+m.name+'</strong><span>'+m.sum.toFixed(1)+' mm</span></div>').join('');
-   status('NASA POWER 2026 data loaded for the selected location. Valid T2M daily records: '+t.length+'. Valid parameter counts — T2M_MAX: '+mx.length+', precipitation: '+r.length+', solar: '+s.length+'.');
-  }catch(e){
-   ids.forEach(k=>set(k,'N/A'));
-   const box=document.getElementById('tv26months');if(box)box.textContent='Monthly totals unavailable because NASA POWER data could not be loaded. No sample values are substituted.';
-   status((e.name==='AbortError'?'NASA POWER request timed out after 45 seconds.':e.message||'Network error')+' Check your connection and refresh later.',true);
-  }
- }
- document.getElementById('tv26refresh')?.addEventListener('click',load);
- document.getElementById('place')?.addEventListener('change',load);
- load();
-})();
-</script></body></html>
+</body></html>
