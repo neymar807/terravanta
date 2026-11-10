@@ -12,49 +12,89 @@
 </head>
 <body>
 <header class="top"><div class="brand"><span class="mark">T</span><span>TERRAVANTA</span></div><nav><a href="index.html">Home & map</a><a href="history.html">Climate history</a><a href="monitoring.html">Field monitoring</a><a class="active" href="climate-risk.html">Climate risk scorecard</a></nav><small>NASA Space Apps Challenge 2026 · Field Shift</small></header>
-<section class="hero"><div class="eyebrow">Experimental indicator · Transparent assumptions</div><h1>Understand climate pressures before they become farm challenges.</h1><p>Explore a demonstration scorecard for heat, rainfall pattern and water context. Each indicator is explained so users can see what is known, what is assumed, and what still needs local verification.</p></section>
+<section class="hero"><div class="eyebrow">Experimental indicator · Transparent assumptions</div><h1>Understand climate pressures before they become farm challenges.</h1><p>Explore NASA POWER daily temperature and precipitation observations for selected locations.</p></section>
 <main class="wrap">
-<div class="head"><div><span class="tag">PROTOTYPE · ILLUSTRATIVE VALUES</span><h2 style="margin-top:8px">Regional climate risk overview</h2><p>Choose a demonstration location to view the sample scorecard.</p></div><select id="place" class="select" aria-label="Choose demonstration location"><option>Quetta, Pakistan</option><option>Lahore, Pakistan</option><option>Karachi, Pakistan</option><option>Islamabad, Pakistan</option><option>Fresno, California, USA</option><option>Phoenix, Arizona, USA</option><option>Ludhiana, India</option><option>Harbin, China</option><option>Toowoomba, Australia</option><option>Nakuru, Kenya</option></select></div>
-<div class="notice"><strong>Important: this is not an official climate warning.</strong>The scores below are illustrative demonstration values created to show how TerraVanta could organize climate indicators. They are not calculated from current NASA observations, do not represent verified risk for the selected city, and must not be used to make planting, irrigation, or financial decisions.</div>
+<div class="head"><div><span class="tag">NASA POWER · 2025 OBSERVATIONS</span><h2 style="margin-top:8px">NASA climate observations</h2><p>Choose a location to request NASA POWER observations for 2025.</p></div><select id="place" class="select" aria-label="Choose demonstration location"><option>Quetta, Pakistan</option><option>Lahore, Pakistan</option><option>Karachi, Pakistan</option><option>Islamabad, Pakistan</option><option>Fresno, California, USA</option><option>Phoenix, Arizona, USA</option><option>Ludhiana, India</option><option>Harbin, China</option><option>Toowoomba, Australia</option><option>Nakuru, Kenya</option></select></div>
+<div class="notice"><strong>Data interpretation</strong>These are NASA POWER gridded/reanalysis climate observations for the selected coordinates, not measurements taken on a particular farm. The 35°C hot-day count is a simple descriptive threshold and is not a crop-specific heat-stress diagnosis. Precipitation does not measure irrigation access, groundwater, soil moisture, or drought impacts.</div>
 <section class="grid" aria-live="polite">
-<div class="card"><div class="label">Overall prototype index</div><div class="score" id="overall">58<span style="font-size:17px;color:#68756d">/100</span></div><span class="pill mid" id="overallLabel">Illustrative · Moderate</span><div class="bar"><span class="mid" id="overallBar" style="width:58%"></span></div><p class="muted">A demonstration composite of the three sample indicator scores below. Not a validated climate-risk model.</p></div>
-<div class="card"><div class="label">Heat indicator</div><div class="score" id="heat">68<span style="font-size:17px;color:#68756d">/100</span></div><span class="pill mid" id="heatLabel">Illustrative · Elevated</span><div class="bar"><span class="mid" id="heatBar" style="width:68%"></span></div><p class="muted">Represents a sample heat-pressure indicator, not a heat forecast.</p></div>
-<div class="card"><div class="label">Rainfall variability indicator</div><div class="score" id="rain">52<span style="font-size:17px;color:#68756d">/100</span></div><span class="pill mid" id="rainLabel">Illustrative · Moderate</span><div class="bar"><span class="mid" id="rainBar" style="width:52%"></span></div><p class="muted">Represents a sample rainfall-variability indicator, not a drought declaration.</p></div>
-<div class="card"><div class="label">Water context indicator</div><div class="score" id="water">54<span style="font-size:17px;color:#68756d">/100</span></div><span class="pill mid" id="waterLabel">Illustrative · Moderate</span><div class="bar"><span class="mid" id="waterBar" style="width:54%"></span></div><p class="muted">A placeholder for water availability context. No field water measurements are included.</p></div>
-<div class="card wide"><h3 style="margin:0 0 5px">What the indicators mean</h3><div class="risk-row"><strong>Heat pressure</strong><span class="pill">Temperature extremes and duration</span></div><p class="muted">A proper assessment would examine daily maximum temperature, warm-spell duration, crop growth stage and locally relevant thresholds.</p><div class="risk-row"><strong>Rainfall variability</strong><span class="pill">Timing and variation</span></div><p class="muted">A proper assessment would compare rainfall totals and timing with a suitable local baseline, including dry spells and seasonal distribution.</p><div class="risk-row"><strong>Water context</strong><span class="pill">Supply and access</span></div><p class="muted">A proper assessment needs local irrigation access, groundwater or surface-water context, soil properties and farm records. Satellite or gridded rainfall alone cannot confirm farm water availability.</p></div>
+<div class="card"><div class="label">NASA mean air temperature</div><div class="score" id="meanTemp">—</div><span class="pill" id="tempStatus">Waiting for NASA data</span><p class="muted">Daily mean 2-metre air temperature averaged across 2025 (°C).</p></div>
+<div class="card"><div class="label">NASA hot days</div><div class="score" id="hotDays">—</div><span class="pill" id="heatStatus">Waiting for NASA data</span><p class="muted">Number of days in 2025 when daily maximum 2-metre temperature reached 35°C or higher. This is a descriptive threshold, not a crop-damage threshold.</p></div>
+<div class="card"><div class="label">NASA annual precipitation</div><div class="score" id="annualRain">—</div><span class="pill" id="rainStatus">Waiting for NASA data</span><p class="muted">Sum of daily corrected precipitation values for 2025 (mm, subject to NASA data availability).</p></div>
+<div class="card wide"><h3 style="margin:0 0 8px">Monthly rainfall pattern</h3><p class="muted">Monthly totals calculated by summing NASA POWER daily corrected precipitation values. This describes timing and variation; it does not, by itself, establish drought or farm water shortage.</p><div id="monthlyRain" class="metric-note">Waiting for NASA POWER data…</div></div>
+<div class="card"><h3 style="margin:0 0 8px">Rainfall variability</h3><div class="score" id="rainCv">—</div><span class="pill" id="variabilityStatus">Waiting for NASA data</span><p class="muted">Coefficient of variation across the 12 monthly precipitation totals (%). A descriptive statistic, not a validated risk score.</p></div>
+<div class="card"><h3 style="margin:0 0 8px">Data coverage</h3><div class="score" id="coverage">—</div><p class="muted" id="coverageNote">Daily records successfully returned by NASA POWER for 2025.</p></div>
 </section>
 <section class="two">
 <div class="card"><h3 style="margin:0 0 8px">How the prototype index is formed</h3><p class="muted">For this interface demonstration only, the three sample scores are averaged equally:</p><p style="font-weight:800;font-size:18px">Index = (Heat + Rainfall + Water) ÷ 3</p><p class="muted">The display rounds the result to the nearest whole number. Equal weighting is a design placeholder, not a scientifically validated weighting scheme. A future research version must document thresholds, baseline periods, uncertainty and validation with local experts.</p></div>
 <div class="card"><h3 style="margin:0 0 8px">What to verify locally</h3><ul class="list"><li>Recent field temperature and rainfall records.</li><li>Soil texture, depth, salinity and water-holding properties.</li><li>Irrigation reliability and seasonal water access.</li><li>Crop type, planting date and sensitive growth stages.</li><li>Advice from local agricultural extension staff or qualified agronomists.</li></ul></div>
 </section>
-<div class="notice"><strong>Data status and next development step</strong>This page currently runs on fixed illustrative values and makes no live data request. NASA POWER provides meteorological and solar parameters through documented APIs, including temperature and precipitation; connecting those observations is a separate future task. Soil and water access still require suitable local sources. <a href="https://power.larc.nasa.gov/docs/services/api/application/indicators/" target="_blank" rel="noreferrer">NASA POWER Climate Indicators documentation</a>.</div>
+<div class="notice"><strong>NASA data source and method</strong>TerraVanta requests daily T2M, T2M_MAX and PRECTOTCORR from NASA POWER for 1 January–31 December 2025. The page calculates the mean of available daily T2M values, counts days with T2M_MAX ≥ 35°C, sums daily PRECTOTCORR, and calculates monthly rainfall totals and their coefficient of variation. NASA POWER documents daily point time-series data and availability from 1981 to near real time. Missing-value codes are excluded. <a href="https://power.larc.nasa.gov/docs/services/api/temporal/daily/" target="_blank" rel="noreferrer">NASA POWER Daily API documentation</a>.</div>
 </main>
 <footer class="foot">Independent student project. Not affiliated with or endorsed by NASA. Data source planned for a future live version: <a href="https://power.larc.nasa.gov/" target="_blank" rel="noreferrer">NASA POWER</a>. Base map on the homepage: OpenStreetMap contributors.</footer>
 <script>
-const profiles={
-'Quetta, Pakistan':[68,52,54],
-'Lahore, Pakistan':[62,48,50],
-'Karachi, Pakistan':[58,46,52],
-'Islamabad, Pakistan':[54,44,48],
-'Fresno, California, USA':[66,50,57],
-'Phoenix, Arizona, USA':[78,43,68],
-'Ludhiana, India':[65,55,58],
-'Harbin, China':[48,50,45],
-'Toowoomba, Australia':[52,46,48],
-'Nakuru, Kenya':[46,48,43]
+const locations={
+'Quetta, Pakistan':[30.1798,66.9750],
+'Lahore, Pakistan':[31.5204,74.3587],
+'Karachi, Pakistan':[24.8607,67.0011],
+'Islamabad, Pakistan':[33.6844,73.0479],
+'Fresno, California, USA':[36.7378,-119.7871],
+'Phoenix, Arizona, USA':[33.4484,-112.0740],
+'Ludhiana, India':[30.9010,75.8573],
+'Harbin, China':[45.8038,126.5350],
+'Toowoomba, Australia':[-27.5598,151.9507],
+'Nakuru, Kenya':[-0.3031,36.0800]
 };
 const $=id=>document.getElementById(id);
-function band(v){return v<35?['Lower sample indicator','']:v<60?['Moderate sample indicator','mid']:['Elevated sample indicator','high'];}
-function show(){
- const [h,r,w]=profiles[$('place').value],total=Math.round((h+r+w)/3);
- [['heat',h],['rain',r],['water',w],['overall',total]].forEach(([id,v])=>{
-  $(id).innerHTML=v+'<span style="font-size:17px;color:#68756d">/100</span>';
-  const [label,cls]=band(v),pill=$(id+'Label'),bar=$(id+'Bar');
-  pill.textContent='Illustrative · '+label.replace(' sample indicator','');
-  pill.className='pill '+cls;
-  bar.style.width=v+'%';bar.className=cls;
- });
+const fmt=(v,d=1)=>Number(v).toFixed(d);
+function setStatus(id,text,kind=''){const e=$(id);e.textContent=text;e.className='pill '+kind;}
+async function loadNASA(){
+ const place=$('place').value, [lat,lon]=locations[place];
+ $('meanTemp').textContent=$('hotDays').textContent=$('annualRain').textContent=$('rainCv').textContent=$('coverage').textContent='…';
+ $('monthlyRain').textContent='Fetching daily observations from NASA POWER…';
+ $('status').textContent='Requesting NASA POWER daily observations for '+place+' (2025)…';
+ $('status').className='status';
+ try{
+  const url=new URL('https://power.larc.nasa.gov/api/temporal/daily/point');
+  url.search=new URLSearchParams({parameters:'T2M,T2M_MAX,PRECTOTCORR',community:'AG',longitude:String(lon),latitude:String(lat),start:'20250101',end:'20251231',format:'JSON','time-standard':'LST'});
+  const response=await fetch(url.toString());
+  if(!response.ok) throw new Error('NASA POWER returned HTTP '+response.status);
+  const json=await response.json();
+  const p=json?.properties?.parameter || json?.parameter;
+  if(!p?.T2M || !p?.T2M_MAX || !p?.PRECTOTCORR) throw new Error('NASA POWER response did not include all requested parameters.');
+  const keys=Object.keys(p.T2M).sort();
+  const valid=(v)=>Number.isFinite(Number(v)) && Number(v)>-900;
+  const temps=keys.map(k=>p.T2M[k]).filter(valid).map(Number);
+  const maxTemps=keys.map(k=>p.T2M_MAX[k]).filter(valid).map(Number);
+  const rain=keys.map(k=>p.PRECTOTCORR[k]).filter(valid).map(Number);
+  if(!temps.length || !rain.length || !maxTemps.length) throw new Error('No usable daily values were returned for one or more parameters.');
+  const avg=temps.reduce((a,b)=>a+b,0)/temps.length;
+  const hot=keys.filter(k=>valid(p.T2M_MAX[k]) && Number(p.T2M_MAX[k])>=35).length;
+  const rainTotal=rain.reduce((a,b)=>a+b,0);
+  const months=Array.from({length:12},(_,i)=>({name:new Date(2025,i,1).toLocaleString('en',{month:'short'}),total:0}));
+  keys.forEach(k=>{const month=Number(k.slice(4,6))-1;const v=p.PRECTOTCORR[k];if(month>=0&&month<12&&valid(v))months[month].total+=Number(v);});
+  const vals=months.map(m=>m.total), mean=vals.reduce((a,b)=>a+b,0)/12;
+  const sd=Math.sqrt(vals.reduce((a,b)=>a+(b-mean)**2,0)/12);
+  const cv=mean>0?sd/mean*100:NaN;
+  $('meanTemp').textContent=fmt(avg)+' °C';
+  $('hotDays').textContent=String(hot);
+  $('annualRain').textContent=fmt(rainTotal,0)+' mm';
+  $('rainCv').textContent=Number.isFinite(cv)?fmt(cv)+'%':'N/A';
+  $('coverage').textContent=String(keys.length);
+  $('coverageNote').textContent='Daily dates returned; valid values — T2M: '+temps.length+', T2M_MAX: '+maxTemps.length+', precipitation: '+rain.length+'.';
+  $('monthlyRain').innerHTML=months.map(m=>'<div class="risk-row"><strong>'+m.name+'</strong><span>'+fmt(m.total,1)+' mm</span></div>').join('');
+  setStatus('tempStatus','NASA POWER · 2025');
+  setStatus('heatStatus','Counted from NASA daily maximums');
+  setStatus('rainStatus','Summed from NASA daily values');
+  setStatus('variabilityStatus','Calculated from monthly totals');
+  $('status').textContent='NASA POWER data loaded for '+place+'. Period: 1 Jan–31 Dec 2025. Data source: NASA POWER.';
+ }catch(err){
+  $('status').textContent='Could not load NASA POWER data: '+err.message+'. Check your connection and try again.';
+  $('status').className='status error';
+  $('monthlyRain').textContent='NASA data unavailable. No sample values are substituted.';
+  ['tempStatus','heatStatus','rainStatus','variabilityStatus'].forEach(id=>setStatus(id,'Data unavailable'));
+ }
 }
-$('place').addEventListener('change',show);show();
+$('place').addEventListener('change',loadNASA);
+loadNASA();
 </script>
 </body></html>
