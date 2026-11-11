@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#10271f">
+<meta name="description" content="Compare NASA MODIS vegetation-index imagery across dates and inspect TerraVanta data provenance and coverage.">
+<title>NDVI Change & Evidence | TerraVanta</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<style>
+:root{--bg:#f4f5ef;--ink:#17271f;--muted:#68756d;--green:#1e5a42;--lime:#c8df8b;--line:#dce2d8;--card:#fff;--amber:#9b6421;--red:#9b4035}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 Inter,system-ui,sans-serif}button,select,input{font:inherit}.top{background:#10271f;color:#fff;padding:16px max(22px,calc((100% - 1160px)/2));display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap}.brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.05em;color:#fff;text-decoration:none}.mark{width:34px;height:34px;border-radius:11px;background:var(--lime);color:#173b2b;display:grid;place-items:center}.nav{display:flex;gap:16px;flex-wrap:wrap}.nav a{color:#d9e6dc;text-decoration:none;font-size:13px}.nav a[aria-current=page]{color:var(--lime);font-weight:800}.hero{background:linear-gradient(115deg,#10271f,#1b4937);color:white;padding:44px max(22px,calc((100% - 1160px)/2))}.eyebrow{color:var(--lime);font-size:12px;letter-spacing:.15em;text-transform:uppercase;font-weight:800}.hero h1{font-size:clamp(32px,5vw,52px);line-height:1.08;margin:12px 0}.hero p{max-width:780px;color:#d0ddd4}.wrap{max-width:1160px;margin:auto;padding:28px 22px 65px}.controls{display:flex;gap:12px;align-items:end;flex-wrap:wrap}.field{display:grid;gap:5px}.field label{font-size:12px;font-weight:800;color:var(--muted)}select,input{padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink)}.btn{padding:11px 14px;border:0;border-radius:10px;background:var(--green);color:white;font-weight:700;cursor:pointer}.btn:disabled{opacity:.6}.status{font-size:13px;color:var(--muted);min-height:23px;margin:13px 0}.section{margin-top:24px}.section-title{font-size:23px;margin:0 0 12px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}.card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:18px;box-shadow:0 4px 18px #173b2b08}.card h3{margin:0 0 6px}.sub,.note{font-size:13px;color:var(--muted)}.map{height:390px;min-height:280px;border:1px solid var(--line);border-radius:10px;background:#e8eee6}.map-status{font-size:12px;color:var(--muted);min-height:36px}.notice{background:#edf3e7;border:1px solid #d8e5ca;border-radius:13px;padding:16px 18px;margin:16px 0;color:#344d3c}.notice strong{display:block;margin-bottom:4px}.evidence-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.evidence-item{background:#f6f8f3;border:1px solid var(--line);border-radius:11px;padding:14px}.evidence-item small{display:block;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em;font-weight:800}.evidence-item strong{display:block;font-size:17px;margin:5px 0;overflow-wrap:anywhere}.evidence-item span{font-size:12px;color:var(--muted)}table{width:100%;border-collapse:collapse;font-size:13px}td,th{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:top}th{font-size:11px;text-transform:uppercase;color:var(--muted)}.tablewrap{overflow-x:auto}.pill{display:inline-block;background:#eef3e9;color:#31543d;padding:4px 9px;border-radius:99px;font-size:11px;font-weight:800}.pill.warn{background:#fff2d9;color:#81551d}.pill.bad{background:#f7e5dc;color:#8a452e}.foot{border-top:1px solid var(--line);padding:22px;text-align:center;color:var(--muted);font-size:12px}.foot a{color:var(--green)}@media(max-width:760px){.grid{grid-template-columns:1fr}.evidence-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.top{align-items:flex-start}.map{height:330px}}
+</style>
+</head>
+<body>
+<header class="top"><a class="brand" href="index.html"><span class="mark">T</span><span>TERRAVANTA</span></a><nav class="nav"><a href="index.html">Home</a><a href="history.html">Climate history & drought</a><a href="monitoring.html">Field monitoring</a><a href="climate-risk.html">Climate risk scorecard</a><a href="case-study.html">Pakistan case study</a><a href="evidence.html" aria-current="page">NDVI & evidence</a></nav></header>
+<section class="hero"><div class="eyebrow">NASA MODIS · Data transparency</div><h1>Compare vegetation patterns. Inspect the evidence.</h1><p>Explore two NASA MODIS vegetation-index composites for the same region and review the sources, units, coverage and limitations behind TerraVanta's environmental indicators.</p></section>
+<main class="wrap">
+<section class="card">
+ <div class="controls">
+  <div class="field"><label for="place">AGRICULTURAL REGION</label><select id="place">
+   <option value="30.1798,66.9750">Quetta, Pakistan</option><option value="31.5204,74.3587">Lahore, Pakistan</option><option value="24.8607,67.0011">Karachi, Pakistan</option><option value="33.6844,73.0479">Islamabad, Pakistan</option><option value="31.4180,73.0790">Faisalabad, Pakistan</option><option value="30.1575,71.5249">Multan, Pakistan</option><option value="34.0151,71.5249">Peshawar, Pakistan</option>
+   <option value="36.7378,-119.7871">Fresno, California, USA</option><option value="33.4484,-112.0740">Phoenix, Arizona, USA</option><option value="40.8136,-96.7026">Lincoln, Nebraska, USA</option><option value="35.3733,-119.0187">Bakersfield, California, USA</option>
+   <option value="30.9010,75.8573">Ludhiana, India</option><option value="22.7196,75.8577">Indore, India</option><option value="21.1458,79.0882">Nagpur, India</option><option value="45.8038,126.5350">Harbin, China</option><option value="38.0428,114.5149">Shijiazhuang, China</option>
+   <option value="-15.6014,-56.0979">Cuiabá, Brazil</option><option value="-27.5598,151.9507">Toowoomba, Australia</option><option value="-34.1855,142.1625">Mildura, Australia</option><option value="-0.3031,36.0800">Nakuru, Kenya</option><option value="37.8746,32.4932">Konya, Türkiye</option><option value="49.8951,-97.1384">Winnipeg, Canada</option>
+  </select></div>
+  <div class="field"><label for="dateA">EARLIER COMPOSITE DATE</label><input id="dateA" type="date" min="2016-07-30" value="2020-07-30"></div>
+  <div class="field"><label for="dateB">LATER COMPOSITE DATE</label><input id="dateB" type="date" min="2016-07-30" value="2025-07-30"></div>
+  <button class="btn" id="compareBtn" type="button">Compare dates</button>
+ </div>
+ <p id="mapStatus" class="status" role="status">Loading NASA MODIS imagery…</p>
+</section>
+<h2 class="section-title section">1. NDVI visual comparison</h2>
+<div class="grid">
+ <section class="card"><h3>Earlier composite</h3><p class="sub" id="labelA">2020-07-30 · NASA Terra MODIS</p><div id="mapA" class="map" role="region" aria-label="Earlier NASA MODIS NDVI map"></div><p id="statusA" class="map-status">Waiting for map tiles…</p></section>
+ <section class="card"><h3>Later composite</h3><p class="sub" id="labelB">2025-07-30 · NASA Terra MODIS</p><div id="mapB" class="map" role="region" aria-label="Later NASA MODIS NDVI map"></div><p id="statusB" class="map-status">Waiting for map tiles…</p></section>
+</div>
+<div class="notice"><strong>How to interpret the comparison</strong>NDVI is a satellite-derived indicator of vegetation greenness. Compare similar seasons and inspect cloud, land-cover and crop-calendar context. This page provides a side-by-side visual comparison of NASA's rendered composites; it does not calculate a pixel-by-pixel NDVI difference or identify crop types, yield, irrigation need or farm-level health. If a date has no available processed image, its map may show only the basemap.</div>
+<section class="card section">
+ <h3>What a visual change can and cannot mean</h3>
+ <div class="tablewrap"><table><thead><tr><th>Visible pattern</th><th>Possible interpretation</th><th>What to check before concluding</th></tr></thead><tbody>
+ <tr><td>Greener appearance</td><td>Higher vegetation greenness in the displayed composite.</td><td>Season, crop calendar, rainfall, irrigation, land-cover change and image quality.</td></tr>
+ <tr><td>Less-green appearance</td><td>Lower vegetation greenness in the displayed composite.</td><td>Harvest timing, fallow fields, drought, cloud contamination and land-cover differences.</td></tr>
+ <tr><td>Little visible difference</td><td>No obvious visual change at this map scale.</td><td>Subtle changes may not be distinguishable in rendered map tiles.</td></tr>
+ </tbody></table></div>
+</section>
+<h2 class="section-title section">2. Evidence & confidence panel</h2>
+<p class="sub">A provenance and coverage record for the selected location. The panel distinguishes satellite imagery, gridded climate estimates and forecast-model output.</p>
+<section class="card">
+ <div class="evidence-grid">
+  <div class="evidence-item"><small>Selected location</small><strong id="evLocation">—</strong><span id="evCoords">Coordinates unavailable</span></div>
+  <div class="evidence-item"><small>Satellite source</small><strong>NASA Terra MODIS</strong><span>GIBS 8-day NDVI visualization</span></div>
+  <div class="evidence-item"><small>Satellite dates</small><strong id="evDates">—</strong><span>Requested composite dates</span></div>
+  <div class="evidence-item"><small>Climate source</small><strong>NASA POWER</strong><span>Daily point time series</span></div>
+  <div class="evidence-item"><small>Climate coverage</small><strong id="evCoverage">—</strong><span>Valid daily records returned for 2025</span></div>
+  <div class="evidence-item"><small>Request status</small><strong id="evStatus">Waiting</strong><span id="evStatusNote">Checking source availability</span></div>
+ </div>
+ <p id="evidenceStatus" class="status" role="status">Checking NASA POWER data coverage…</p>
+ <div class="tablewrap"><table><thead><tr><th>Indicator</th><th>Variable</th><th>Unit</th><th>Source / method</th><th>Interpretation limit</th></tr></thead><tbody>
+ <tr><td>Vegetation greenness</td><td>MODIS Terra NDVI 8-day composite</td><td>NDVI is dimensionless</td><td>NASA GIBS WMS rendered satellite layer</td><td>Visual context only on this page; not a quantitative pixel-difference calculation.</td></tr>
+ <tr><td>Mean air temperature</td><td>T2M</td><td>°C</td><td>NASA POWER daily gridded/reanalysis estimate</td><td>Not a field thermometer reading.</td></tr>
+ <tr><td>Maximum air temperature</td><td>T2M_MAX</td><td>°C</td><td>NASA POWER daily gridded/reanalysis estimate</td><td>A 35°C count is descriptive, not a crop-specific stress diagnosis.</td></tr>
+ <tr><td>Precipitation</td><td>PRECTOTCORR</td><td>mm/day</td><td>NASA POWER daily corrected precipitation</td><td>Does not measure irrigation, groundwater or soil moisture.</td></tr>
+ <tr><td>Forecast soil moisture</td><td>Open-Meteo soil moisture layers</td><td>m³/m³</td><td>Forecast-model estimate</td><td>Not an in-field sensor or soil test.</td></tr>
+ </tbody></table></div>
+</section>
+<div class="notice"><strong>Confidence is not a single score</strong>TerraVanta does not assign a scientific confidence percentage to these datasets. Reliability depends on the variable, spatial scale, date availability, valid-record coverage, satellite quality and how closely the data match the question. This panel reports provenance and coverage so users can judge the evidence transparently.</div>
+<section class="card section"><h3>Sources & documentation</h3><ul class="sub"><li><a href="https://nasa-gibs.github.io/gibs-api-docs/" target="_blank" rel="noreferrer">NASA Global Imagery Browse Services (GIBS)</a></li><li><a href="https://lpdaac.usgs.gov/products/mod13q1v061/" target="_blank" rel="noreferrer">MODIS vegetation-index product information</a></li><li><a href="https://power.larc.nasa.gov/docs/services/api/temporal/daily/" target="_blank" rel="noreferrer">NASA POWER Daily API documentation</a></li><li><a href="https://open-meteo.com/en/docs" target="_blank" rel="noreferrer">Open-Meteo forecast API documentation</a></li></ul></section>
+</main>
+<footer class="foot">Independent student project; not affiliated with or endorsed by NASA. Regional data and rendered imagery do not replace field measurements or local agricultural advice.</footer>
+<script>
+const $=id=>document.getElementById(id);
+let mapA=null,mapB=null,layerA=null,layerB=null,baseA=null,baseB=null;
+function initMap(id,center){
+ const map=L.map(id).setView(center,6);
+ const base=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'&copy; OpenStreetMap contributors'});
+ base.addTo(map);
+ return {map,base};
+}
+function setMapDate(which,date){
+ const target=which==='A'?mapA:mapB,old=which==='A'?layerA:layerB,status=$('status'+which);
+ if(!target)return;
+ if(old)target.removeLayer(old);
+ const layer=L.tileLayer.wms('https://gibs.earthdata.nasa.gov/wms/epsg3857/best/wms.cgi',{
+  layers:'MODIS_Terra_NDVI_8Day',format:'image/png',transparent:true,version:'1.1.1',time:date,opacity:.82
+ });
+ let tileCount=0,errorCount=0;
+ status.textContent='Requesting NASA GIBS tiles for '+date+'…';
+ layer.on('tileload',()=>{tileCount++;status.textContent='NASA GIBS imagery tiles loaded for '+date+'.';});
+ layer.on('tileerror',()=>{errorCount++;if(tileCount===0)status.textContent='NASA GIBS tile error for '+date+'. The date may not have processed imagery, or the service/network may be unavailable.';});
+ layer.addTo(target);
+ if(which==='A')layerA=layer;else layerB=layer;
+}
+function updateCompare(){
+ const dateA=$('dateA').value,dateB=$('dateB').value;
+ if(!dateA||!dateB){$('mapStatus').textContent='Choose both composite dates.';return;}
+ if(dateA===dateB){$('mapStatus').textContent='Choose two different dates to compare.';return;}
+ $('labelA').textContent=dateA+' · NASA Terra MODIS';
+ $('labelB').textContent=dateB+' · NASA Terra MODIS';
+ $('evDates').textContent=dateA+' / '+dateB;
+ setMapDate('A',dateA);setMapDate('B',dateB);
+ $('mapStatus').textContent='Requested side-by-side NASA MODIS NDVI composites. Tile availability is reported separately for each date.';
+}
+async function loadEvidence(){
+ const place=$('place').selectedOptions[0].text,[lat,lon]=$('place').value.split(',').map(Number);
+ $('evLocation').textContent=place;$('evCoords').textContent=lat.toFixed(4)+', '+lon.toFixed(4);
+ $('evCoverage').textContent='Loading…';$('evStatus').textContent='Checking';$('evStatusNote').textContent='Requesting NASA POWER 2025 daily data';
+ $('evidenceStatus').textContent='Checking NASA POWER data coverage for '+place+'…';
+ const url=new URL('https://power.larc.nasa.gov/api/temporal/daily/point');
+ url.search=new URLSearchParams({parameters:'T2M,T2M_MAX,PRECTOTCORR',community:'AG',longitude:String(lon),latitude:String(lat),start:'20250101',end:'20251231',format:'JSON','time-standard':'LST'});
+ const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),45000);
+ try{
+  const response=await fetch(url,{signal:controller.signal,cache:'no-store'});
+  if(!response.ok)throw new Error('NASA POWER returned HTTP '+response.status+'.');
+  const json=await response.json(),p=json?.properties?.parameter;
+  if(!p?.T2M||!p?.T2M_MAX||!p?.PRECTOTCORR)throw new Error('NASA POWER response is missing one or more requested variables.');
+  const valid=v=>v!==null&&v!==undefined&&Number.isFinite(Number(v))&&Number(v)>-900;
+  const count=key=>Object.values(p[key]).filter(valid).length;
+  const counts={T2M:count('T2M'),T2M_MAX:count('T2M_MAX'),PRECTOTCORR:count('PRECTOTCORR')};
+  $('evCoverage').textContent='T2M '+counts.T2M+'/365 · T2M_MAX '+counts.T2M_MAX+'/365 · Rain '+counts.PRECTOTCORR+'/365';
+  $('evStatus').textContent='NASA POWER response received';$('evStatusNote').textContent='2025 daily data fields checked';
+  $('evidenceStatus').textContent='NASA POWER returned 2025 data for '+place+'. Valid records are counted separately for each variable; counts are coverage indicators, not a formal uncertainty score.';
+ }catch(error){
+  const message=error.name==='AbortError'?'The NASA POWER request timed out.':(error.message||'Network request failed.');
+  $('evCoverage').textContent='Unavailable';$('evStatus').textContent='Request failed';$('evStatusNote').textContent=message;
+  $('evidenceStatus').textContent='Could not verify NASA POWER coverage for '+place+'. '+message+' Retry by changing the location or reloading the page.';
+ }finally{clearTimeout(timer);}
+}
+function changePlace(){
+ const [lat,lon]=$('place').value.split(',').map(Number),center=[lat,lon];
+ if(mapA&&mapB){mapA.setView(center,6);mapB.setView(center,6);}
+ loadEvidence();
+}
+if(window.L){
+ const coords=$('place').value.split(',').map(Number);
+ const a=initMap('mapA',coords),b=initMap('mapB',coords);mapA=a.map;mapB=b.map;
+ $('place').addEventListener('change',changePlace);
+ $('compareBtn').addEventListener('click',updateCompare);
+ updateCompare();loadEvidence();
+}else{
+ $('mapStatus').textContent='Leaflet map library could not load. Check your connection and reload the page.';
+ $('evidenceStatus').textContent='Map library unavailable; NASA POWER evidence coverage can still be checked after the map dependency loads.';
+}
+</script>
+</body></html>
