@@ -73,14 +73,107 @@ function updateNdvi(){
  ndviLayer.addTo(ndviMap);
  $('ndviStatus').textContent='Requesting NASA GIBS MODIS Terra 8-day NDVI composite for '+date+'. If the selected date has no processed imagery, choose an earlier date.';
 }
-function load(){
+function average(values){
+ const valid=(values||[]).filter(v=>Number.isFinite(v));
+ return valid.length ? valid.reduce((a,b)=>a+b,0)/valid.length : null;
+}
+function maxValue(values){
+ const valid=(values||[]).filter(v=>Number.isFinite(v));
+ return valid.length ? Math.max(...valid) : null;
+}
+function fmt(value,digits=1){
+ return Number.isFinite(value) ? value.toFixed(digits) : 'Unavailable';
+}
+function renderForecast(daily){
+ const dates=daily.time||[], temps=daily.temperature_2m_max||[], rain=daily.precipitation_sum||[];
+ const width=760,height=230,left=42,right=18,top=18,bottom=38;
+ const n=Math.min(7,dates.length,temps.length,rain.length);
+ if(!n){$('forecastChart').innerHTML='';return;}
+ const tvals=temps.slice(0,n).filter(Number.isFinite);
+ const rvals=rain.slice(0,n).filter(Number.isFinite);
+ if(!tvals.length || !rvals.length){$('forecastChart').innerHTML='';return;}
+ const tmin=Math.min(...tvals)-2,tmax=Math.max(...tvals)+2;
+ const rmax=Math.max(1,...rvals)*1.2;
+ const x=i=>left+(width-left-right)*(n===1?0.5:i/(n-1));
+ const yT=v=>top+(height-top-bottom)*(1-(v-tmin)/(tmax-tmin||1));
+ const yR=v=>top+(height-top-bottom)*(1-v/rmax);
+ let svg='';
+ for(let k=0;k<4;k++){
+  const y=top+(height-top-bottom)*k/3;
+  svg+='<line class="gridline" x1="'+left+'" y1="'+y+'" x2="'+(width-right)+'" y2="'+y+'"/>';
+ }
+ for(let i=0;i<n;i++){
+  const bx=x(i)-12, by=yR(Number.isFinite(rain[i])?rain[i]:0);
+  svg+='<rect class="rainbar" x="'+bx+'" y="'+by+'" width="24" height="'+(height-bottom-by)+'" rx="4"><title>'+dates[i]+': '+fmt(rain[i])+' mm precipitation</title></rect>';
+  svg+='<text x="'+x(i)+'" y="'+(height-12)+'" text-anchor="middle">'+dates[i].slice(5)+'</text>';
+ }
+ const pts=[];
+ for(let i=0;i<n;i++)if(Number.isFinite(temps[i]))pts.push(x(i)+','+yT(temps[i]));
+ if(pts.length)svg+='<polyline class="temp-line" points="'+pts.join(' ')+'"/>';
+ for(let i=0;i<n;i++)if(Number.isFinite(temps[i])){
+  svg+='<circle cx="'+x(i)+'" cy="'+yT(temps[i])+'" r="4" fill="#1e7654"><title>'+dates[i]+': '+fmt(temps[i])+' °C maximum</title></circle>';
+ }
+ svg+='<text x="42" y="12">Temperature (°C)</text><text x="718" y="12" text-anchor="end">Rain (mm)</text>';
+ $('forecastChart').innerHTML=svg;
+}
+async function load(){
  const place=$('place').selectedOptions[0].text;
+ const [lat,lon]=$('place').value.split(',').map(Number);
  updateNdvi();
- ['sm1','sm2','sm3','maxTemp','rainTotal','windMax'].forEach(id=>$(id).textContent='N/A');
+ $('refresh').disabled=true;
+ $('status').textContent='Loading live forecast and model-estimated soil moisture for '+place+'…';
+ $('riskSummary').textContent='Retrieving forecast indicators…';
+ $('riskRows').innerHTML='';
  $('forecastChart').innerHTML='';
- $('riskSummary').textContent='No live forecast or field sensor feed is connected. Risk status is unavailable; no demonstration thresholds are applied.';
- $('riskRows').innerHTML=[['Soil moisture','Unavailable','No field sensor or verified soil-moisture feed connected.'],['Seven-day rainfall','Unavailable','A live forecast source is not connected.'],['Maximum wind gust','Unavailable','A live forecast source is not connected.']].map(r=>'<tr><td>'+r[0]+'</td><td>'+r[1]+'</td><td>'+r[2]+'</td></tr>').join('');
- $('status').textContent='Field monitoring data unavailable for '+place+'. Soil moisture, satellite imagery and seven-day forecast are not connected; no sample values are shown.';
+ ['sm1','sm2','sm3','maxTemp','rainTotal','windMax'].forEach(id=>$(id).textContent='Loading…');
+ const params=new URLSearchParams({
+  latitude:String(lat),longitude:String(lon),timezone:'auto',forecast_days:'7',
+  daily:'temperature_2m_max,precipitation_sum,wind_gusts_10m_max',
+  hourly:'soil_moisture_0_to_1cm,soil_moisture_9_to_27cm,soil_moisture_27_to_81cm'
+ });
+ const controller=new AbortController();
+ const timeout=setTimeout(()=>controller.abort(),20000);
+ try{
+  const response=await fetch('https://api.open-meteo.com/v1/forecast?'+params.toString(),{signal:controller.signal});
+  if(!response.ok)throw new Error('Weather service returned HTTP '+response.status+'.');
+  const data=await response.json();
+  if(data.error)throw new Error(data.reason||'The weather service could not provide data for this location.');
+  if(!data.daily||!data.hourly)throw new Error('The weather service response is missing forecast or soil-moisture fields.');
+  const daily=data.daily,hourly=data.hourly;
+  const sm1=average(hourly.soil_moisture_0_to_1cm),sm2=average(hourly.soil_moisture_9_to_27cm),sm3=average(hourly.soil_moisture_27_to_81cm);
+  const temps=daily.temperature_2m_max||[],rain=daily.precipitation_sum||[],gusts=daily.wind_gusts_10m_max||[];
+  const tmax=maxValue(temps),rainTotal=rain.filter(Number.isFinite).reduce((a,b)=>a+b,0),windMax=maxValue(gusts);
+  $('sm1').textContent=sm1===null?'Unavailable':fmt(sm1,3);
+  $('sm2').textContent=sm2===null?'Unavailable':fmt(sm2,3);
+  $('sm3').textContent=sm3===null?'Unavailable':fmt(sm3,3);
+  $('maxTemp').textContent=tmax===null?'Unavailable':fmt(tmax)+' °C';
+  $('rainTotal').textContent=rain.length?fmt(rainTotal)+' mm':'Unavailable';
+  $('windMax').textContent=windMax===null?'Unavailable':fmt(windMax)+' km/h';
+  renderForecast(daily);
+  const heat=temps.some(v=>Number.isFinite(v)&&v>=35),lowRain=rain.length>0&&rainTotal<5,highWind=windMax!==null&&windMax>=40;
+  const flags=[];
+  if(heat)flags.push('heat watch');
+  if(lowRain)flags.push('low-rain watch');
+  if(highWind)flags.push('wind watch');
+  $('riskSummary').textContent=flags.length?'Screening flags for '+place+': '+flags.join(', ')+'. Review local advisories and farm conditions.':'No prototype watch thresholds were crossed in this forecast for '+place+'. This is not a guarantee of safe conditions.';
+  const rows=[
+   ['Heat screening',heat?'Flagged':'Not flagged','At least one daily maximum temperature is 35°C or higher.'],
+   ['Low-rain screening',lowRain?'Flagged':'Not flagged','Seven-day precipitation total is below 5 mm.'],
+   ['High-wind screening',highWind?'Flagged':'Not flagged','At least one daily maximum wind gust is 40 km/h or higher.'],
+   ['Soil moisture',sm1!==null&&sm2!==null&&sm3!==null?'Model estimates loaded':'Partially unavailable','Forecast-model estimates averaged across available hourly values; not field sensor readings.']
+  ];
+  $('riskRows').innerHTML=rows.map(r=>'<tr><td>'+r[0]+'</td><td>'+r[1]+'</td><td>'+r[2]+'</td></tr>').join('');
+  $('status').textContent='Live Open-Meteo forecast data loaded for '+place+'. Soil moisture values are model estimates for the forecast period, not field measurements.';
+ }catch(error){
+  const message=error.name==='AbortError'?'The weather request timed out. Please try Refresh monitoring data again.':(error.message||'The weather service could not be reached.');
+  ['sm1','sm2','sm3','maxTemp','rainTotal','windMax'].forEach(id=>$(id).textContent='Unavailable');
+  $('riskSummary').textContent='Risk screening unavailable because forecast data could not be loaded.';
+  $('riskRows').innerHTML='<tr><td>Forecast and soil moisture</td><td>Unavailable</td><td>'+message.replace(/</g,'&lt;')+'</td></tr>';
+  $('status').textContent='Could not load live monitoring data for '+place+'. '+message;
+ }finally{
+  clearTimeout(timeout);
+  $('refresh').disabled=false;
+ }
 }
 $('refresh').addEventListener('click',load);$('place').addEventListener('change',load);$('ndviRefresh').addEventListener('click',updateNdvi);load();
 </script>
