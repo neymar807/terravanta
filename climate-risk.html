@@ -18,6 +18,19 @@
 <main class="wrap">
 <div class="head"><div><span class="tag">NASA POWER · 2025 OBSERVATIONS</span><h2 style="margin-top:8px">NASA climate observations</h2><p>Choose a location to request NASA POWER observations for 2025.</p></div><select id="place" class="select" aria-label="Choose demonstration location"><option>Quetta, Pakistan</option><option>Lahore, Pakistan</option><option>Karachi, Pakistan</option><option>Islamabad, Pakistan</option><option>Fresno, California, USA</option><option>Phoenix, Arizona, USA</option><option>Ludhiana, India</option><option>Harbin, China</option><option>Toowoomba, Australia</option><option>Nakuru, Kenya</option><option>Faisalabad, Pakistan</option><option>Multan, Pakistan</option><option>Peshawar, Pakistan</option><option>Lincoln, Nebraska, USA</option><option>Fargo, North Dakota, USA</option><option>Bakersfield, California, USA</option><option>Salinas, California, USA</option><option>Yakima, Washington, USA</option><option>Amarillo, Texas, USA</option><option>Indore, India</option><option>Nagpur, India</option><option>Jaipur, India</option><option>Shijiazhuang, China</option><option>Chengdu, China</option><option>Cuiabá, Brazil</option><option>Goiânia, Brazil</option><option>Mildura, Australia</option><option>Griffith, Australia</option><option>Winnipeg, Canada</option><option>Regina, Canada</option><option>Bloemfontein, South Africa</option><option>Johannesburg, South Africa</option><option>Lviv, Ukraine</option><option>Dnipro, Ukraine</option></select></div>
 <p id="status" role="status" aria-live="polite" style="margin:12px 0;color:#526158;font-size:13px">Connecting to NASA POWER…</p>
+
+<section class="card tv2026" id="anomalyDetector" aria-live="polite">
+ <div class="tv26head"><div><span class="tv26tag">NASA POWER · CLIMATE ANOMALY</span><h2>Climate anomaly detector</h2><p>Compare each month of 2025 with the same calendar month's 1991–2020 baseline for the selected location.</p></div><button class="tv26btn" id="anomalyRefresh" type="button">Refresh anomaly analysis</button></div>
+ <p id="anomalyStatus" class="tv26status" role="status">Requesting NASA POWER monthly data for the 1991–2020 baseline and 2025…</p>
+ <div class="tv26grid">
+  <div><small>Mean monthly temperature departure</small><strong id="anomalyTemp">—</strong><span>°C · average of available monthly departures</span></div>
+  <div><small>Average monthly precipitation departure</small><strong id="anomalyRain">—</strong><span>% · average of monthly percentage departures</span></div>
+  <div><small>Months compared</small><strong id="anomalyCoverage">—</strong><span>Of 12 calendar months</span></div>
+ </div>
+ <h3>Month-by-month comparison</h3>
+ <div class="tablewrap" style="overflow-x:auto"><table class="table" style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr><th>Month</th><th>2025 mean temp</th><th>1991–2020 mean</th><th>Temp departure</th><th>2025 precip rate</th><th>Baseline precip rate</th><th>Precip departure</th></tr></thead><tbody id="anomalyRows"><tr><td colspan="7">Waiting for NASA POWER…</td></tr></tbody></table></div>
+ <p class="tv26note">Method: NASA POWER monthly point data for T2M and PRECTOTCORR. For each calendar month, the 2025 monthly value is compared with the mean of that same month across 1991–2020. Temperature departure is in °C. Precipitation departure is percentage difference in monthly mean daily precipitation rate (mm/day), not annual rainfall total. A missing month is left unavailable rather than estimated. This is a climate comparison, not proof of climate-change attribution or a farm-level impact assessment.</p>
+</section>
 <div class="notice"><strong>Data interpretation</strong>These are NASA POWER gridded/reanalysis climate observations for the selected coordinates, not measurements taken on a particular farm. The 35°C hot-day count is a simple descriptive threshold and is not a crop-specific heat-stress diagnosis. Precipitation does not measure irrigation access, groundwater, soil moisture, or drought impacts.</div>
 <section class="grid" aria-live="polite">
 <div class="card"><div class="label">NASA mean air temperature</div><div class="score" id="meanTemp">—</div><span class="pill" id="tempStatus">Waiting for NASA data</span><p class="muted">Daily mean 2-metre air temperature averaged across 2025 (°C).</p></div>
@@ -73,6 +86,64 @@ const $=id=>document.getElementById(id);
 const valid=v=>v!==null&&v!==undefined&&Number.isFinite(Number(v))&&Number(v)>-900;
 const fmt=(v,d=1)=>Number(v).toFixed(d);
 function setStatus(id,text,kind=''){const e=$(id);if(e){e.textContent=text;e.className='pill '+kind;}}
+
+const anomalyMonthNames=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function anomalyNumber(v){return v!==null&&v!==undefined&&Number.isFinite(Number(v))&&Number(v)>-900?Number(v):null;}
+function anomalyMean(a){const x=a.filter(v=>v!==null&&Number.isFinite(v));return x.length?x.reduce((p,q)=>p+q,0)/x.length:null;}
+async function loadAnomaly(){
+ const place=$('place').value,coords=locations[place];
+ if(!coords){$('anomalyStatus').textContent='Location coordinates are not configured.';return;}
+ const [lat,lon]=coords;
+ $('anomalyRefresh').disabled=true;
+ $('anomalyStatus').textContent='Requesting NASA POWER monthly data for '+place+' (1991–2025)…';
+ $('anomalyRows').innerHTML='<tr><td colspan="7">Loading monthly climate data…</td></tr>';
+ ['anomalyTemp','anomalyRain','anomalyCoverage'].forEach(id=>$(id).textContent='…');
+ const url=new URL('https://power.larc.nasa.gov/api/temporal/monthly/point');
+ url.search=new URLSearchParams({parameters:'T2M,PRECTOTCORR',community:'AG',longitude:String(lon),latitude:String(lat),start:'1991',end:'2025',format:'JSON'});
+ const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),60000);
+ try{
+  const response=await fetch(url,{signal:ctl.signal,cache:'no-store'});
+  if(!response.ok)throw new Error('NASA POWER returned HTTP '+response.status+'.');
+  const json=await response.json(),params=json?.properties?.parameter;
+  if(!params?.T2M||!params?.PRECTOTCORR)throw new Error('NASA POWER response did not include both temperature and precipitation.');
+  const t=params.T2M,r=params.PRECTOTCORR;
+  const rows=[];
+  for(let m=1;m<=12;m++){
+   const mm=String(m).padStart(2,'0'),baselineT=[],baselineR=[];
+   for(let y=1991;y<=2020;y++){
+    const key=String(y)+mm;
+    const tv=anomalyNumber(t[key]),rv=anomalyNumber(r[key]);
+    if(tv!==null)baselineT.push(tv);
+    if(rv!==null)baselineR.push(rv);
+   }
+   const targetT=anomalyNumber(t['2025'+mm]),targetR=anomalyNumber(r['2025'+mm]);
+   const baseT=anomalyMean(baselineT),baseR=anomalyMean(baselineR);
+   const tDiff=targetT!==null&&baseT!==null?targetT-baseT:null;
+   const rPct=targetR!==null&&baseR!==null&&baseR>0?(targetR-baseR)/baseR*100:null;
+   rows.push({month:anomalyMonthNames[m-1],targetT,baseT,tDiff,targetR,baseR,rPct,baseTn:baselineT.length,baseRn:baselineR.length});
+  }
+  const tempDiffs=rows.map(x=>x.tDiff).filter(x=>x!==null),rainDiffs=rows.map(x=>x.rPct).filter(x=>x!==null);
+  $('anomalyTemp').textContent=tempDiffs.length?(anomalyMean(tempDiffs)>0?'+':'')+anomalyMean(tempDiffs).toFixed(2)+' °C':'N/A';
+  $('anomalyRain').textContent=rainDiffs.length?(anomalyMean(rainDiffs)>0?'+':'')+anomalyMean(rainDiffs).toFixed(1)+'%':'N/A';
+  $('anomalyCoverage').textContent=rows.filter(x=>x.tDiff!==null&&x.rPct!==null).length+' / 12';
+  $('anomalyRows').innerHTML=rows.map(x=>{
+   const tempClass=x.tDiff===null?'':(x.tDiff>0?'high':(x.tDiff<0?'low':''));
+   const rainClass=x.rPct===null?'':(x.rPct>0?'low':(x.rPct<0?'high':''));
+   return '<tr><td><strong>'+x.month+'</strong></td><td>'+(x.targetT===null?'N/A':x.targetT.toFixed(1)+' °C')+'</td><td>'+(x.baseT===null?'N/A':x.baseT.toFixed(1)+' °C')+' <span class="muted">('+x.baseTn+'/30)</span></td><td><span class="pill '+tempClass+'">'+(x.tDiff===null?'N/A':(x.tDiff>0?'+':'')+x.tDiff.toFixed(2)+' °C')+'</span></td><td>'+(x.targetR===null?'N/A':x.targetR.toFixed(2)+' mm/day')+'</td><td>'+(x.baseR===null?'N/A':x.baseR.toFixed(2)+' mm/day')+' <span class="muted">('+x.baseRn+'/30)</span></td><td><span class="pill '+rainClass+'">'+(x.rPct===null?'N/A':(x.rPct>0?'+':'')+x.rPct.toFixed(1)+'%')+'</span></td></tr>';
+  }).join('');
+  $('anomalyStatus').textContent='NASA POWER monthly data loaded for '+place+'. Temperature comparison available for '+tempDiffs.length+' months; precipitation comparison available for '+rainDiffs.length+' months. Baseline is the same calendar month averaged across 1991–2020.';
+  $('anomalyStatus').style.color='#31543d';
+ }catch(error){
+  const msg=error.name==='AbortError'?'The NASA POWER monthly request timed out.':(error.message||'A network error prevented the request.');
+  $('anomalyStatus').textContent='Climate anomaly analysis unavailable for '+place+'. '+msg+' Please retry. No sample values are shown.';
+  $('anomalyStatus').style.color='#9b422d';
+  $('anomalyTemp').textContent='N/A';$('anomalyRain').textContent='N/A';$('anomalyCoverage').textContent='N/A';
+  $('anomalyRows').innerHTML='<tr><td colspan="7">No anomaly values displayed because the NASA POWER request failed.</td></tr>';
+ }finally{
+  clearTimeout(timer);
+  $('anomalyRefresh').disabled=false;
+ }
+}
 function monthsLabel(i){return new Date(2025,i,1).toLocaleString('en',{month:'short'});}
 function showFailure(message){
  const status=$('status');if(status){status.textContent=message;status.style.color='#9b422d';}
@@ -137,7 +208,9 @@ async function loadNASA(){
   showFailure('Could not load NASA POWER data for '+place+'. '+reason+' Check your internet connection and try Refresh 2026 data. No sample values are substituted.');
  }
 }
-$('place').addEventListener('change',loadNASA);
+$('place').addEventListener('change',()=>{loadNASA();loadAnomaly();});
+$('anomalyRefresh').addEventListener('click',loadAnomaly);
 $('tv26refresh').addEventListener('click',loadNASA);
 loadNASA();
+loadAnomaly();
 </script></body></html>
