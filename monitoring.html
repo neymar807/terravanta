@@ -103,15 +103,14 @@ function renderForecast(daily){
   svg+='<line class="gridline" x1="'+left+'" y1="'+y+'" x2="'+(width-right)+'" y2="'+y+'"/>';
  }
  for(let i=0;i<n;i++){
-  const bx=x(i)-12, by=yR(Number.isFinite(rain[i])?rain[i]:0);
-  svg+='<rect class="rainbar" x="'+bx+'" y="'+by+'" width="24" height="'+(height-bottom-by)+'" rx="4"><title>'+dates[i]+': '+fmt(rain[i])+' mm precipitation</title></rect>';
+  if(Number.isFinite(rain[i])){const bx=x(i)-12,by=yR(rain[i]);svg+='<rect tabindex="0" class="rainbar" x="'+bx+'" y="'+by+'" width="24" height="'+(height-bottom-by)+'" rx="4"><title>'+dates[i]+': '+fmt(rain[i])+' mm precipitation</title></rect>';}
   svg+='<text x="'+x(i)+'" y="'+(height-12)+'" text-anchor="middle">'+dates[i].slice(5)+'</text>';
  }
  const pts=[];
  for(let i=0;i<n;i++)if(Number.isFinite(temps[i]))pts.push(x(i)+','+yT(temps[i]));
  if(pts.length)svg+='<polyline class="temp-line" points="'+pts.join(' ')+'"/>';
  for(let i=0;i<n;i++)if(Number.isFinite(temps[i])){
-  svg+='<circle cx="'+x(i)+'" cy="'+yT(temps[i])+'" r="4" fill="#1e7654"><title>'+dates[i]+': '+fmt(temps[i])+' °C maximum</title></circle>';
+  svg+='<circle tabindex="0" cx="'+x(i)+'" cy="'+yT(temps[i])+'" r="6" fill="#1e7654"><title>'+dates[i]+': '+fmt(temps[i])+' °C daily maximum temperature</title></circle>';
  }
  svg+='<text x="42" y="12">Temperature (°C)</text><text x="718" y="12" text-anchor="end">Rain (mm)</text>';
  $('forecastChart').innerHTML=svg;
