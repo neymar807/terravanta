@@ -91,18 +91,20 @@ const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov',
 let climate=null, locationName='Quetta, Pakistan';
 function drawChart(el,values,{max,unit,color='bar'}={}){
  const w=el.id==='rainChart'?640:420,h=220,left=36,right=12,top=12,bottom=32,pw=w-left-right,ph=h-top-bottom;
- const safeMax=max||Math.max(...values,1)*1.15, step=safeMax/4;
+ const valid=values.filter(v=>Number.isFinite(v)),safeMax=(Number.isFinite(max)&&max>0)?max:Math.max(1,...valid)*1.15,step=safeMax/4;
  let s='';
- for(let i=0;i<=4;i++){let y=top+ph-i*ph/4;s+=`<line class="axis" x1="${left}" y1="${y}" x2="${w-right}" y2="${y}"/><text x="${left-7}" y="${y+4}" text-anchor="end">${Math.round(step*i)}</text>`}
+ for(let i=0;i<=4;i++){let y=top+ph-i*ph/4;s+=`<line class="axis" x1="${left}" y1="${y}" x2="${w-right}" y2="${y}"/><text x="${left-7}" y="${y+4}" text-anchor="end">${(step*i).toFixed(0)}</text>`}
  const slot=pw/12;
  if(color==='line'){
-  const pts=values.map((v,i)=>[left+slot*(i+.5),top+ph-(v/safeMax)*ph]);
-  s+=`<polyline class="line" points="${pts.map(p=>p.join(',')).join(' ')}"/>`;
-  pts.forEach(([x,y],i)=>s+=`<circle cx="${x}" cy="${y}" r="5" tabindex="0" style="cursor:crosshair" fill="#1e7654"><title>${months[i]} · ${values[i].toFixed(1)} ${unit}</title></circle>`);
+  const pts=values.map((v,i)=>Number.isFinite(v)?[left+slot*(i+.5),top+ph-(v/safeMax)*ph]:null);
+  let segment=[];const segments=[];pts.forEach(p=>{if(p)segment.push(p);else if(segment.length){segments.push(segment);segment=[];}});if(segment.length)segments.push(segment);
+  segments.forEach(group=>{if(group.length>1)s+=`<polyline class="line" points="${group.map(p=>p.join(',')).join(' ')}"/>`;});
+  pts.forEach((p,i)=>{if(!p)return;const label=months[i]+': '+values[i].toFixed(1)+' '+unit;s+=`<circle cx="${p[0]}" cy="${p[1]}" r="6" tabindex="0" style="cursor:crosshair" fill="#1e7654"><title>${label}</title></circle>`;});
  }else{
-  values.forEach((v,i)=>{let bh=Math.max(1,v/safeMax*ph),x=left+i*slot+slot*.18;s+=`<rect class="bar" tabindex="0" style="cursor:crosshair" x="${x}" y="${top+ph-bh}" width="${slot*.64}" height="${bh}" rx="4"><title>${months[i]} · ${v.toFixed(1)} ${unit}</title></rect>`});
+  values.forEach((v,i)=>{if(!Number.isFinite(v))return;let bh=Math.max(1,v/safeMax*ph),x=left+i*slot+slot*.18,label=months[i]+': '+v.toFixed(1)+' '+unit;s+=`<rect class="bar" tabindex="0" style="cursor:crosshair" x="${x}" y="${top+ph-bh}" width="${slot*.64}" height="${bh}" rx="4"><title>${label}</title></rect>`;});
  }
  months.forEach((m,i)=>s+=`<text x="${left+slot*(i+.5)}" y="${h-8}" text-anchor="middle">${m}</text>`);
+ if(!valid.length)s+=`<text x="${w/2}" y="${h/2}" text-anchor="middle">No valid data for this chart</text>`;
  el.innerHTML=s;
 }
 let worldMap=null,mapMarkers=[];
@@ -140,7 +142,7 @@ async function loadData(){
   keys.forEach(k=>{const m=+k.slice(4,6)-1,g=groups[m];if(!g)return;if(valid(p.T2M[k])){g.t+=+p.T2M[k];g.tn++;}if(valid(p.PRECTOTCORR[k]))g.r+=+p.PRECTOTCORR[k];if(valid(p.ALLSKY_SFC_SW_DWN[k])){g.s+=+p.ALLSKY_SFC_SW_DWN[k];g.sn++;}});
   const vals=id=>keys.map(k=>p[id][k]).filter(valid).map(Number),t=vals('T2M'),r=vals('PRECTOTCORR'),s=vals('ALLSKY_SFC_SW_DWN'),avg=a=>a.reduce((x,y)=>x+y,0)/a.length;
   if(!t.length||!r.length||!s.length)throw new Error('No valid daily observations returned');
-  const rain=groups.map(g=>g.r),temps=groups.map(g=>g.tn?g.t/g.tn:0);
+  const rain=groups.map(g=>g.r),temps=groups.map(g=>g.tn?g.t/g.tn:null);
   climate={temps,rain,solar:groups.map(g=>g.sn?g.s/g.sn:null),annualTemp:avg(t),annualRain:r.reduce((a,b)=>a+b,0),annualSolar:avg(s),locationName};
   $('temp').textContent=climate.annualTemp.toFixed(1)+'°';$('rain').textContent=climate.annualRain.toFixed(1);$('solar').textContent=climate.annualSolar.toFixed(2);
   drawChart($('rainChart'),rain,{max:Math.max(1,...rain)*1.15,unit:'mm'});drawChart($('tempChart'),temps,{max:Math.max(1,...temps)*1.15,unit:'°C',color:'line'});
