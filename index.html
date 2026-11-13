@@ -174,7 +174,7 @@ async function runRegionComparison(){
   const render=(key,unit)=>'<div style="overflow-x:auto"><table class="drought-table"><thead><tr><th>Region</th>'+results[0].years.map(x=>'<th>'+x.year+'</th>').join('')+'</tr></thead><tbody>'+results.map(r=>'<tr><td><strong>'+r.name+'</strong></td>'+r.years.map(y=>'<td>'+(y[key]===null?'N/A':y[key].toFixed(1)+' '+unit)+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
   $('compareTemp').innerHTML=render('temp','°C');$('compareRain').innerHTML=render('rain','mm');
   status.textContent='NASA POWER comparison loaded. Missing values are shown as N/A; check valid data coverage before interpreting differences.';
- }catch(e){status.textContent='Comparison unavailable: '+(e.message||'network error')+'. No sample values substituted.';$('compareTemp').textContent='Data unavailable.';$('compareRain').textContent='Data unavailable.';}
+ }catch(e){status.textContent='Comparison unavailable: '+(e.message||'network error')+'. No substitute values are displayed.';$('compareTemp').textContent='Data unavailable.';$('compareRain').textContent='Data unavailable.';}
  finally{$('runCompare').disabled=false;}
 }
 $('runCompare').addEventListener('click',runRegionComparison);
