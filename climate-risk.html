@@ -135,7 +135,7 @@ async function loadAnomaly(){
   $('anomalyStatus').style.color='#31543d';
  }catch(error){
   const msg=error.name==='AbortError'?'The NASA POWER monthly request timed out.':(error.message||'A network error prevented the request.');
-  $('anomalyStatus').textContent='Climate anomaly analysis unavailable for '+place+'. '+msg+' Please retry. No sample values are shown.';
+  $('anomalyStatus').textContent='Climate anomaly analysis unavailable for '+place+'. '+msg+' Please retry. No substitute values are shown.';
   $('anomalyStatus').style.color='#9b422d';
   $('anomalyTemp').textContent='N/A';$('anomalyRain').textContent='N/A';$('anomalyCoverage').textContent='N/A';
   $('anomalyRows').innerHTML='<tr><td colspan="7">No anomaly values displayed because the NASA POWER request failed.</td></tr>';
@@ -205,7 +205,7 @@ async function loadNASA(){
   $('tv26status').style.color=(t26.length||r26.length)?'':'#9b422d';
  }catch(err){
   const reason=err.name==='AbortError'?'The NASA POWER request timed out after 60 seconds.':(err.message||'A network error prevented the request.');
-  showFailure('Could not load NASA POWER data for '+place+'. '+reason+' Check your internet connection and try Refresh 2026 data. No sample values are substituted.');
+  showFailure('Could not load NASA POWER data for '+place+'. '+reason+' Check your internet connection and try Refresh 2026 data. No substitute values are displayed.');
  }
 }
 $('place').addEventListener('change',()=>{loadNASA();loadAnomaly();});
