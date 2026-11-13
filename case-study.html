@@ -50,7 +50,7 @@ async function load(){
   }));
   rows.innerHTML=results.map(result=>result.annual.map(y=>'<tr><td>'+result.place.name+'</td><td>'+y.year+'</td><td>'+(y.temp===null?'N/A':y.temp.toFixed(2)+' °C')+'</td><td>'+(y.rain===null?'N/A':y.rain.toFixed(1)+' mm')+'</td><td>'+y.tn+' / '+y.rn+'</td></tr>').join('')).join('');
   status.textContent='NASA POWER data loaded. Check valid-day counts before comparing years.';
- }catch(e){rows.innerHTML='<tr><td colspan="5">Data unavailable. No sample values are displayed.</td></tr>';status.textContent='Could not load the case study: '+(e.message||'network error')+'. Try again later.';}
+ }catch(e){rows.innerHTML='<tr><td colspan="5">Data unavailable. No substitute values are displayed.</td></tr>';status.textContent='Could not load the case study: '+(e.message||'network error')+'. Try again later.';}
  finally{document.getElementById('reload').disabled=false;}
 }
 
@@ -78,7 +78,7 @@ async function runRegionComparison(){
   document.getElementById('compareRain').innerHTML=render('rain','mm');
   status.textContent='NASA POWER comparison loaded. Missing values are shown as N/A; check data coverage before interpreting differences.';
  }catch(e){
-  status.textContent='Comparison unavailable: '+(e.message||'network error')+'. No sample values substituted.';
+  status.textContent='Comparison unavailable: '+(e.message||'network error')+'. No substitute values are displayed.';
   document.getElementById('compareTemp').textContent='Data unavailable.';
   document.getElementById('compareRain').textContent='Data unavailable.';
  }finally{button.disabled=false;}
