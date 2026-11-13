@@ -75,7 +75,7 @@
 <div class="card"><h3>Farm profile</h3><p class="sub">Add information that a farmer or local expert can verify.</p>
 <div class="field"><label for="soil">Known soil type (optional)</label><select id="soil"><option value="">Not sure / not entered</option><option>Loamy</option><option>Sandy</option><option>Clay</option><option>Silty</option><option>Other / mixed</option></select></div>
 <div class="field"><label for="water">Water availability</label><select id="water"><option>Not specified</option><option>Reliable irrigation</option><option>Limited irrigation</option><option>Mostly rain-fed</option></select></div>
-<div class="field"><label for="crop">Current or usual crop (optional)</label><input id="crop" placeholder="e.g. wheat"></div>
+<div class="field"><label for="crop">Current or usual crop (optional)</label><input id="crop" placeholder="Enter a crop name"></div>
 <div class="field"><label for="priority">Main farming priority</label><select id="priority"><option>Conserve water</option><option>Improve soil health</option><option>Manage heat stress</option><option>Reduce weather-related risk</option></select></div>
 <button id="brief" class="btn">Create my evidence summary</button></div>
 <div class="card"><h3>Your evidence summary</h3><p class="sub">A transparent starting point for a conversation with local agricultural experts.</p><div id="summary" aria-live="polite"><p class="metric-note">Complete the farm profile and select “Create my evidence summary” to generate a summary of the available data and the details still needed.</p></div></div>
@@ -147,7 +147,7 @@ async function loadData(){
   $('temp').textContent=climate.annualTemp.toFixed(1)+'°';$('rain').textContent=climate.annualRain.toFixed(1);$('solar').textContent=climate.annualSolar.toFixed(2);
   drawChart($('rainChart'),rain,{max:Math.max(1,...rain)*1.15,unit:'mm'});drawChart($('tempChart'),temps,{max:Math.max(1,...temps)*1.15,unit:'°C',color:'line'});
   $('status').textContent='NASA POWER observations loaded for '+locationName+' · 2025. Valid daily records: temperature '+t.length+', precipitation '+r.length+', solar '+s.length+'.';
- }catch(e){climate=null;['temp','rain','solar'].forEach(id=>$(id).textContent='N/A');$('status').textContent='NASA POWER unavailable: '+(e.message||'network error')+'. No sample values substituted.';$('status').className='status error';}
+ }catch(e){climate=null;['temp','rain','solar'].forEach(id=>$(id).textContent='N/A');$('status').textContent='NASA POWER unavailable: '+(e.message||'network error')+'. No substitute values are displayed.';$('status').className='status error';}
 }
 $('load').addEventListener('click',loadData);$('place').addEventListener('change',()=>{loadData();renderMap();});
 $('brief').addEventListener('click',()=>{
