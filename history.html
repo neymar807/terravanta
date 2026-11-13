@@ -62,7 +62,7 @@ async function load(){
   }
   climate={byYear,annual};render();
   $('status').textContent='NASA POWER daily observations loaded for '+place+' · 2019–2024. Monthly averages and totals use valid daily values; no sample data are substituted.';
- }catch(e){climate=null;['temp','rain','solar'].forEach(id=>$(id).textContent='N/A');$('status').textContent='NASA POWER historical data unavailable: '+(e.message||'network error')+'. No sample values substituted.';$('status').className='status error';}
+ }catch(e){climate=null;['temp','rain','solar'].forEach(id=>$(id).textContent='N/A');$('status').textContent='NASA POWER historical data unavailable: '+(e.message||'network error')+'. No substitute values are displayed.';$('status').className='status error';}
 }
 $('load').addEventListener('click',load);$('place').addEventListener('change',load);$('year').addEventListener('change',render);load();
 </script>
